@@ -1,0 +1,72 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <!-- Qunit testing stylesheets -->
+    <link rel="stylesheet" href="css/qunit-1.20.0.css">
+
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <!-- Place favicon.ico in the root directory -->
+    <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/mermaid.css" />
+
+    <!-- Qunit libraries-->
+    <script src="js/vendor/qunit-1.20.0.js"></script>
+    <script type="text/javascript" src="js/vendor/sinon-1.17.2.js"></script>
+    <script type="text/javascript" src="js/vendor/sinon-qunit-1.0.0.js"></script>
+
+    <!-- Requirejs-->
+    <script src="js/vendor/require.js"></script>
+    <!-- <script data-main="js/main.js" src="js/vendor/require.js"></script>-->
+</head>
+<body>
+<!-- Add your site or application content here -->
+<p>Hello world! This is HTML5 Boilerplate.</p>
+
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<div id="mermaid"></div>
+
+<div id="app">
+    <div id="appmain"></div>
+</div>
+<div id="feedback"></div>
+
+<script>
+    QUnit.config.autostart = false;
+    sinon.config = {
+        useFakeTimers: false
+    }; // some stupid stuff you have to do to use sinon AND setTimeout with Qunit...
+
+    require({
+        baseUrl: 'js',//here the path for required modules is relative to the index.html folder in which requirejs is loaded
+        paths: {
+            rx: 'vendor/rx.all',
+            cycle: 'vendor/cycle',
+            mermaid: 'vendor/mermaidAPI',
+            ramda : 'vendor/ramda',
+            'cycle-snabbdom': 'vendor/cycle-snabbdom',
+            snabbdom: 'vendor/snabbdom',
+            snabbdom_attributes: 'vendor/snabbdom_attributes',
+            snabbdom_class: 'vendor/snabbdom_class',
+            snabbdom_eventlisteners: 'vendor/snabbdom_eventlisteners',
+            snabbdom_props: 'vendor/snabbdom_props',
+            snabbdom_style: 'vendor/snabbdom_style',
+        }
+    }, [
+        // but here the path for `require` dependencies is still relative to the `index.html`
+//        "qunit_specs/test_util.specs.js",
+//        "qunit_specs/util.specs.js",
+        "qunit_specs/m.specs.js",
+    ], function () {
+        console.info("Starting QUnit tests");
+        QUnit.dump.maxDepth = 10;
+        QUnit.start();
+    });
+</script>
+
+</body>
+</html>
