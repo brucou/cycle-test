@@ -67,7 +67,7 @@ function require_util(Rx, $, R, Sdom) {
   //   TODO : 4x3x7 -> 84 tests!!! cut through the branches with the null and {} values out?
   //   TODO : turn it into 4 + 3 + 3 = 10 tests
 
-  function m(component_def, _settings, children) {
+  function m(componentDef, _settings, children) {
     // check inputs against expected types
     const mSignature = [
       {component_def: isNullableObject},
@@ -79,11 +79,11 @@ function require_util(Rx, $, R, Sdom) {
 
     return function m(sources, innerSettings) {
       const settings = mergeR(_settings, innerSettings)
-      const makeLocalSources = component_def.makeLocalSources || identity
-      const makeLocalSettings = component_def.makeLocalSettings || identity
-      const makeOwnSinks = component_def.makeOwnSinks || always(null)
-      const mergeSinks = component_def.mergeSinks || mergeSinksDefault
-      const sinksContract = component_def.sinksContract || null
+      const makeLocalSources = componentDef.makeLocalSources || identity
+      const makeLocalSettings = componentDef.makeLocalSettings || identity
+      const makeOwnSinks = componentDef.makeOwnSinks || always(null)
+      const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
+      const sinksContract = componentDef.sinksContract || null
 
       // Computes and MERGES the extra sources which will be passed
       // to the children and this component
@@ -143,16 +143,15 @@ function require_util(Rx, $, R, Sdom) {
    * Note that all arguments are mandatory, i.e. the function does not deal with
    * optional arguments
    * @param {String} fnName
-   * @param _arguments
-   * @param vRules Validation rules. Takes the shape [{parameterName : predicateFn}]
-   * @param errorMessage
+   * @param {Array<*>} _arguments
+   * @param {[Array<Object.<string, Predicate>>]} vRules Validation rules.
    *
    * Given f(x, y) =  x + y, with x both int, in the body of `f`, include
    * function f(x, y) {
- *   assertSignature ('f', arguments, [{x:isInteger},{y:isInteger}],
- *                  'one of the parameters is not an integer!')
- *   ...
- * }
+   *   assertSignature ('f', arguments, [{x:isInteger},{y:isInteger}],
+   *                  'one of the parameters is not an integer!')
+   *   ...
+   * }
    */
   function assertSignature(fnName, _arguments, vRules) {
     const argNames = flatten(mapR(keys, vRules))
@@ -315,28 +314,50 @@ function require_util(Rx, $, R, Sdom) {
     return reject(isNil, arr)
   }
 
+  function cloneVNode(vNode) {
+    let clone = {}
+    mapR(x => clone[x] = vNode[x],
+      ['sel', 'data', 'children', 'text', 'elm', 'key']
+    )
+    return clone
+  }
+
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
       if (parentDOMSink) {
         // Case : the parent sinks have a DOM sink
-        let parentVNode = arrayVNode.shift()
+        let parentVNode = cloneVNode(arrayVNode.shift())
         let childrenVNode = arrayVNode
-        let parentVNodeChildren = parentVNode.children || []
+        parentVNode.children = parentVNode.children || []
         // Add the children vNodes produced by the children sinks
         // after the existing children produced by the parent sink
-        Array.prototype.push.apply(parentVNodeChildren, childrenVNode)
+        Array.prototype.push.apply(parentVNode.children, childrenVNode)
 
         return parentVNode
       }
       else {
-        // Case : the parent sinks do not have a DOM sink
+        // Case : the parent sinks does not have a DOM sink
         return div(arrayVNode)
       }
     }
   }
 
   /**
-   * Merges the DOM nodes produces by a parent component with the DOM nodes
+   * For each element object of the array, returns the indicated property of that
+   * object, if it exists, null otherwise.
+   * For instance, `projectSinksOn('a', obj)` with obj :
+   * - [{a: ..., b: ...}, {b:...}]
+   * - result : [..., null]
+   * @param {String} prop
+   * @param {Array<*>} obj
+   * @returns {Array<*>}
+   */
+  function projectSinksOn(prop, obj) {
+    return mapR(x => x ? x[prop] : null, obj)
+  }
+
+  /**
+   * Merges the DOM nodes produced by a parent component with the DOM nodes
    * produced by children components, such that the parent DOM nodes
    * wrap around the children DOM nodes
    * For instance:
@@ -349,9 +370,7 @@ function require_util(Rx, $, R, Sdom) {
    */
   function mergeDOMSinksDefault(parentSinks, childrenSinks) {
     const allSinks = flatten([parentSinks, childrenSinks])
-    const allDOMSinks = removeNullsFromArray(mapR(
-        x => x ? x.DOM : null,
-      allSinks))
+    const allDOMSinks = removeNullsFromArray(projectSinksOn('DOM', allSinks))
     var parentDOMSink = parentSinks ? parentSinks.DOM : null
 
     // Edge case : none of the sinks have a DOM sink
@@ -368,10 +387,7 @@ function require_util(Rx, $, R, Sdom) {
     // should be taken care of as part of the general case
     // $.merge([]) should produce one undefined value
     // TODO : check that is the case also with most
-    return $.merge(removeNullsFromArray(mapR(
-          x => x ? x[sinkName] : null,
-        allSinks))
-    )
+    return $.merge(removeNullsFromArray(projectSinksOn(sinkName, allSinks)))
   }
 
   function makeDefaultMergedSinks(parentSinks, childrenSinks) {
@@ -404,7 +420,9 @@ function require_util(Rx, $, R, Sdom) {
     const allSinks = flatten(removeNullsFromArray([parentSinks, childrenSinks]))
     const sinkNames = uniq(flatten(mapR(keys, allSinks)))
 
-    return reduceR(makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames)
+    return reduceR(
+      makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames
+    )
   }
 
   // Testing utilities
@@ -412,7 +430,7 @@ function require_util(Rx, $, R, Sdom) {
 
   /**
    *
-   * @param _diagram
+   * @param {String} _diagram
    * @param {{timeUnit:Number, errorValue:Object, values:Object}} opt
    * @returns {{sequence: Array, completeDelay: undefined}}
    */
@@ -452,7 +470,7 @@ function require_util(Rx, $, R, Sdom) {
 
   /**
    * Creates a real stream out of an ASCII drawing of a stream. Each string
-   * character represents an amount of time passed (by default, 20 milliseconds).
+   * character represents an amount of time passed.
    * `-` characters represent nothing special, `|` is a symbol to mark the
    * completion of the stream, `#` is an error on the stream, and any other
    * character is a "next" event.
@@ -519,7 +537,8 @@ function require_util(Rx, $, R, Sdom) {
     m: m,
     makeSourceFromDiagram: makeSourceFromDiagram,
     assertSignature: assertSignature,
-    assertContract : assertContract,
+    assertContract: assertContract,
+    projectSinksOn : projectSinksOn,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,

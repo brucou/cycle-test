@@ -18,8 +18,6 @@ define(function (require) {
   const modules = [Mclass, Mprops, Mstyle, Mattributes]
   const $ = Rx.Observable
 
-  // console.log('sdom', Sdom)
-
   function makeFakeRouterDriver() {
     return function routerDriver(routeIntent$) {
       routeIntent$.tap(console.log.bind(console, 'routerDriver : routeIntent$ :'))
@@ -38,12 +36,12 @@ define(function (require) {
     }
   }
 
-  var drivers = {
+  const drivers = {
     DOM: makeDOMDriver('#app', {transposition: false, modules}),
     router: makeFakeRouterDriver(),
     auth$: makeFakeAuthDriver(),
     queue$: makeFakeQueueDriver(),
-  };
+  }
 
   function main(sources) {
 

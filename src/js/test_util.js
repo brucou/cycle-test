@@ -5,8 +5,11 @@ define(function (require) {
   const $ = Rx.Observable
 
   return require_test_utils(Rx, $, R, U)
-});
+})
 
+/**
+ * @typedef {function(*):boolean} Predicate
+ */
 /**
  * @typedef {Object} Input
  */
@@ -28,7 +31,7 @@ define(function (require) {
  * @property {!Object.<string, Sequence>} inputs
  * @property {!Object.<string, ExpectedRecord>} expected
  */
-//TODO : check for mandatory parameters and throw if not there
+
 function require_test_utils(Rx, $, R, U) {
   const makeSourceFromDiagram = U.makeSourceFromDiagram
   const identity = R.identity
@@ -227,14 +230,13 @@ function require_test_utils(Rx, $, R, U) {
       testSinks
     )
 
-    // TODO : also check that there is a testCase for each sink in sinkResults
     assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
       'runTestScenario : in testCase, could not find test inputs for all sinks!'
     )
 
-    /** @type {Object.<string, Observable<Array<Output>>>} */
     // Side-effect : execute `analyzeTestResults` function which
     // makes use of `assert` and can lead to program interruption
+    /** @type {Object.<string, Observable<Array<Output>>>} */
     const resultAnalysis = mapObjIndexed(
       analyzeTestResults(testCase),
       sinksResults
