@@ -36,11 +36,15 @@ function require_test_utils(Rx, $, R, U) {
   const valuesR = R.values
   const allR = R.all
   const reduceR = R.reduce
+  const keysR = R.keys
   const rxlog = function (label) {return console.warn.bind(console, label)}
   const isOptSinks = U.isOptSinks
 
   const assertSignature = U.assertSignature
+  const assertContract = U.assertContract
 
+  //////
+  // Contract and signature checking helpers
   function isTestCase(obj) {
     return obj.inputs && isSequence(obj.inputs)
       && obj.expected && isExpectedRecord(obj.expected)
@@ -68,7 +72,13 @@ function require_test_utils(Rx, $, R, U) {
     return R.all(isExpectedStruct, valuesR(obj))
   }
 
-  function makeTestSources(aSourceNames){
+  function hasTestCaseForEachSink(testCase, sinkNames) {
+    return allR(sinkName => testCase.expected[sinkName], sinkNames)
+  }
+
+  //////
+  // test execution helpers
+  function makeTestSources(aSourceNames) {
     return reduceR((accTestSources, sourceName) => {
       accTestSources[sourceName] = new Rx.ReplaySubject(1)
       return accTestSources
@@ -154,6 +164,9 @@ function require_test_utils(Rx, $, R, U) {
     }
   }
 
+  //////
+  // Main functions
+
   /**
    * Tests a function against sources' test input values and the expected
    * values defined in a test case object.
@@ -214,6 +227,11 @@ function require_test_utils(Rx, $, R, U) {
       testSinks
     )
 
+    // TODO : also check that there is a testCase for each sink in sinkResults
+    assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
+      'runTestScenario : in testCase, could not find test inputs for all sinks!'
+    )
+
     /** @type {Object.<string, Observable<Array<Output>>>} */
     // Side-effect : execute `analyzeTestResults` function which
     // makes use of `assert` and can lead to program interruption
@@ -234,6 +252,6 @@ function require_test_utils(Rx, $, R, U) {
 
   return {
     runTestScenario: runTestScenario,
-    makeTestSources : makeTestSources
+    makeTestSources: makeTestSources
   }
 }

@@ -190,6 +190,23 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
+   * Test against a predicate, and throws an exception if the predicate
+   * is not satisfied
+   * @param {function(*): boolean} contractFn Predicate that must be satisfy
+   * @param {Array<*>} contractArgs
+   * @param {String} errorMessage
+   * @returns {boolean}
+   * @throws
+   */
+  function assertContract(contractFn, contractArgs, errorMessage) {
+    if (!contractFn.apply(null, contractArgs)) {
+      throw 'assertContract : fails contract ' + contractFn.name +
+      '\n' + errorMessage
+    }
+    return true
+  }
+
+  /**
    * Returns true iff the passed parameter is null or undefined OR a POJO
    * @param {Object} obj
    * @returns {boolean}
@@ -298,17 +315,59 @@ function require_util(Rx, $, R, Sdom) {
     return reject(isNil, arr)
   }
 
+  function mergeChildrenIntoParentDOM(parentDOMSink) {
+    return function mergeChildrenIntoParentDOM(arrayVNode) {
+      if (parentDOMSink) {
+        // Case : the parent sinks have a DOM sink
+        let parentVNode = arrayVNode.shift()
+        let childrenVNode = arrayVNode
+        let parentVNodeChildren = parentVNode.children || []
+        // Add the children vNodes produced by the children sinks
+        // after the existing children produced by the parent sink
+        Array.prototype.push.apply(parentVNodeChildren, childrenVNode)
+
+        return parentVNode
+      }
+      else {
+        // Case : the parent sinks do not have a DOM sink
+        return div(arrayVNode)
+      }
+    }
+  }
+
+  /**
+   * Merges the DOM nodes produces by a parent component with the DOM nodes
+   * produced by children components, such that the parent DOM nodes
+   * wrap around the children DOM nodes
+   * For instance:
+   * - parent -> div(..., [h2(...)])
+   * - children -> [div(...), button(...)]
+   * - result : div(..., [h2(...), div(...), button(...)])
+   * @param {Sinks} parentSinks
+   * @param {Array<Sinks>} childrenSinks
+   * @returns {Observable<VNode>|Null}
+   */
   function mergeDOMSinksDefault(parentSinks, childrenSinks) {
     const allSinks = flatten([parentSinks, childrenSinks])
-    return $.combineLatest(removeNullsFromArray(mapR(
-          x => x ? x.DOM : null,
-        allSinks))
-    )
-      .map(arrayVNode => div(arrayVNode))
+    const allDOMSinks = removeNullsFromArray(mapR(
+        x => x ? x.DOM : null,
+      allSinks))
+    var parentDOMSink = parentSinks ? parentSinks.DOM : null
+
+    // Edge case : none of the sinks have a DOM sink
+    if (allDOMSinks.length === 0) {return null}
+
+    return $.combineLatest(allDOMSinks)
+      .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
   function mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName) {
     const allSinks = flatten([parentSinks, childrenSinks])
+
+    // The edge case when none of the sinks have a non-DOM sink
+    // should be taken care of as part of the general case
+    // $.merge([]) should produce one undefined value
+    // TODO : check that is the case also with most
     return $.merge(removeNullsFromArray(mapR(
           x => x ? x[sinkName] : null,
         allSinks))
@@ -339,17 +398,17 @@ function require_util(Rx, $, R, Sdom) {
    * @param {Sinks|Null} parentSinks
    * @param {Array<Sinks>} childrenSinks
    * @param {Settings} settings
+   * @returns {Sinks}
    */
   function mergeSinksDefault(parentSinks, childrenSinks, settings) {
     const allSinks = flatten(removeNullsFromArray([parentSinks, childrenSinks]))
-    const sinkNames = uniq(flatten(mapR(sinks => keys(sinks), allSinks)))
+    const sinkNames = uniq(flatten(mapR(keys, allSinks)))
 
     return reduceR(makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames)
   }
 
   // Testing utilities
-  // fromDiagram
-  const defaultTimeUnit = 10
+  const defaultTimeUnit = 50
 
   /**
    *
@@ -460,6 +519,7 @@ function require_util(Rx, $, R, Sdom) {
     m: m,
     makeSourceFromDiagram: makeSourceFromDiagram,
     assertSignature: assertSignature,
+    assertContract : assertContract,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,

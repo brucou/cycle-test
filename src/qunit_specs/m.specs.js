@@ -14,6 +14,12 @@ define(function (require) {
   const reduceR = R.reduce
   const makeTestSources = tutils.makeTestSources
 
+  // Fixtures
+  const PROVIDERS = {
+    google: 'google',
+    facebook: 'facebook',
+  }
+
   QUnit.module("Testing m helper", {});
 
   QUnit.skip("m(component_def, settings, children) : edge cases", function exec_test(assert) {
@@ -157,11 +163,6 @@ define(function (require) {
     // No children, settings : ?, full component def(sink DOM, auth,
     //   queue, extra source user$) using the extra sources created
 
-    // Fixtures
-    const PROVIDERS = {
-      google: 'google',
-      facebook: 'facebook',
-    }
     const vNode = {
       "children": [
         {
@@ -295,9 +296,9 @@ define(function (require) {
   })
 
   QUnit.test(
-    "m(component_def, settings, children) : main cases - children components and parent component",
+    "m(component_def, settings, children) : main cases - children components and parent component - default merge",
     function exec_test(assert) {
-      let done = assert.async(4)
+      let done = assert.async(5)
 
       // Test case 4
       // 4 children: [component, component], settings : {...}, full component def (DOM, queue, auth, action)
@@ -329,52 +330,17 @@ define(function (require) {
             user$: $.of(settings),
           }
         },
-        // TODO: I am here, don't use default here
         makeOwnSinks: (sources, settings) => ({
           DOM: $.of(div('.parent')),
           auth$: sources.auth$.startWith(PROVIDERS.google),
-        }),
-        mergeSinks: (parentSinks, childrenSinks, settings) => ({
-          DOM: parentSinks.DOM,
-          auth$: parentSinks.auth$,
-          user$: parentSinks.user$,
-          childrenSinks$: $.of(childrenSinks),
-          settings$: $.of(settings),
         }),
         sinksContract: [function checkMSinksContracts() {return true}]
 
       }, testSettings, [childComponent1, childComponent2])
 
-      const testSources = makeTestSources(['DOM', 'a', 'b', 'c', 'd', 'e'])
+      const testSources = makeTestSources(['DOM', 'auth$', 'a', 'b', 'c', 'd', 'e'])
 
-      const vNodes = [
-        // 1
-        div([
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'bold'}}, testSettings.main),
-          ]),
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'italic'}}, 'local setting'),
-          ]),
-        ]),
-        // 2
-        div([
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'bold'}}, testSettings.main),
-          ]),
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'italic'}}, 'local setting'),
-          ]),
-        ]),// 3
-        div([
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'bold'}}, testSettings.main),
-          ]),
-          h('div', {}, [
-            h('span', {style: {fontWeight: 'italic'}}, 'local setting'),
-          ]),
-        ]),
-      ]
+      const vNodes = []
 
       function analyzeTestResults(actual, expected, message) {
         assert.deepEqual(actual, expected, message)
@@ -384,6 +350,8 @@ define(function (require) {
       /** @type TestCase */
       const testCase = {
         inputs: {
+          // TODO I am here
+          auth$: {diagram: 'a|', values: {a: 'auth-0'}},
           a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
           b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}},
           c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}},
@@ -394,6 +362,12 @@ define(function (require) {
           DOM: {
             outputs: vNodes,
             successMessage: 'sink DOM produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+          auth$: {
+            outputs: ["google", "auth-0"],
+            successMessage: 'sink auth$ produces the expected values',
             analyzeTestResults: analyzeTestResults,
             transformFn: undefined,
           },
@@ -431,6 +405,5 @@ define(function (require) {
       })
 
     })
-
 
 })
