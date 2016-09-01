@@ -70,7 +70,7 @@ function require_util(Rx, $, R, Sdom) {
   function m(componentDef, _settings, children) {
     // check inputs against expected types
     const mSignature = [
-      {component_def: isNullableObject},
+      {componentDef: isNullableComponentDef},
       {settings: isNullableObject},
       {children: isArrayOf(isComponent)},
     ]
@@ -83,7 +83,7 @@ function require_util(Rx, $, R, Sdom) {
       const makeLocalSettings = componentDef.makeLocalSettings || identity
       const makeOwnSinks = componentDef.makeOwnSinks || always(null)
       const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
-      const sinksContract = componentDef.sinksContract || null
+      const sinksContract = componentDef.sinksContract || always(true)
 
       // Computes and MERGES the extra sources which will be passed
       // to the children and this component
@@ -101,11 +101,15 @@ function require_util(Rx, $, R, Sdom) {
           childComponent => childComponent(extendedSources, localSettings),
         children
       )
+      assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
+      assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
 
       // merge the sinks from children and one-s own...
       const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
+      assertContract(isOptSinks, [reducedSinks], 'mergeSinks must return a hash of observable sink')
+      // ... and make sure that the result follow the relevant contracts when defined...
+      assertContract(sinksContract, [reducedSinks], 'fails custom contract ' + sinksContract.name)
 
-      // ... and make sure that the result follow the relevant contracts...
       assert_contracts(reducedSinks, sinksContract)
 
       // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
@@ -216,6 +220,19 @@ function require_util(Rx, $, R, Sdom) {
     return obj == null || typeof obj === 'object'
   }
 
+  function isNullableComponentDef(obj) {
+    // Note that `==` is used instead of `===`
+    // This allows to test for `undefined` and `null` at the same time
+    return obj == null || (
+        (!obj.makeLocalSources || isFunction(obj.makeLocalSources)) &&
+        (!obj.makeLocalSettings || isFunction(obj.makeLocalSettings)) &&
+        (!obj.makeOwnSinks || isFunction(obj.makeOwnSinks)) &&
+        (!obj.mergeSinks || isFunction(obj.mergeSinks)) &&
+        (!obj.sinksContract || isFunction(obj.sinksContract))
+      )
+    // TODO : decide on the type of sinkContract
+  }
+
   function isUndefined(obj) {
     return typeof obj === 'undefined'
   }
@@ -273,7 +290,12 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   function isOptSinks(obj) {
-    return allR(eitherR(isUndefined, isObservable), valuesR(obj))
+    // obj can be null
+    return !obj || allR(eitherR(isUndefined, isObservable), valuesR(obj))
+  }
+
+  function isArrayOptSinks(arrSinks) {
+    return mapR(isOptSinks, arrSinks)
   }
 
   /**
@@ -374,6 +396,7 @@ function require_util(Rx, $, R, Sdom) {
     var parentDOMSink = parentSinks ? parentSinks.DOM : null
 
     // Edge case : none of the sinks have a DOM sink
+    // That should not be possible as we come here only when we detect a DOM sink
     if (allDOMSinks.length === 0) {return null}
 
     return $.combineLatest(allDOMSinks)
@@ -384,9 +407,8 @@ function require_util(Rx, $, R, Sdom) {
     const allSinks = flatten([parentSinks, childrenSinks])
 
     // The edge case when none of the sinks have a non-DOM sink
-    // should be taken care of as part of the general case
-    // $.merge([]) should produce one undefined value
-    // TODO : check that is the case also with most
+    // should never happen as we come here only when we have a sink name
+    // which is not a DOM sink
     return $.merge(removeNullsFromArray(projectSinksOn(sinkName, allSinks)))
   }
 
@@ -421,6 +443,7 @@ function require_util(Rx, $, R, Sdom) {
     const sinkNames = uniq(flatten(mapR(keys, allSinks)))
 
     return reduceR(
+      // Note : default merge does not make use of the settings!
       makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames
     )
   }
@@ -538,7 +561,7 @@ function require_util(Rx, $, R, Sdom) {
     makeSourceFromDiagram: makeSourceFromDiagram,
     assertSignature: assertSignature,
     assertContract: assertContract,
-    projectSinksOn : projectSinksOn,
+    projectSinksOn: projectSinksOn,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,

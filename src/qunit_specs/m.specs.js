@@ -21,9 +21,9 @@ define(function (require) {
     facebook: 'facebook',
   }
 
-  QUnit.module("Testing m helper", {})
+  QUnit.module("Testing m(component_def, settings, children)", {})
 
-  QUnit.test("m(component_def, settings, children) : edge cases", function exec_test(assert) {
+  QUnit.skip("edge cases - no arguments", function exec_test(assert) {
     //    let done = assert.async(3)
 
     assert.throws(function () {m()}, /fails/,
@@ -32,8 +32,141 @@ define(function (require) {
 
   })
 
+  QUnit.skip(
+    "edge cases - children components and parent component - default merge - no DOM sinks",
+    function exec_test(assert) {
+      let done = assert.async(5)
+
+      // Test case 4
+      // 4 children: [component, component], settings : {...}, full component def (DOM, queue, auth, action)
+
+      const testSettings = null
+
+      const childComponent1 = function childComponent1(sources, settings) {
+        return {
+          a: sources.b.map(x => 'child1-a-' + x),
+          c: sources.c.map(x => 'child1-c-' + x),
+        }
+      }
+      const childComponent2 = function childComponent1(sources, settings) {
+        return {
+          DOM: $.combineLatest(sources.a, a => h('div', {}, [
+            h('span', {style: {fontWeight: 'italic'}}, 'child2-' + a),
+          ])),
+          a: sources.d.map(x => 'child2-a-' + x),
+          d: sources.e.map(x => 'child2-e-' + x),
+        }
+      }
+
+      const mComponent = m({
+        makeLocalSources: (sources, settings) => {
+          return {
+            user$: $.of(settings),
+          }
+        },
+        makeOwnSinks: (sources, settings) => ({
+          DOM: $.of(div('.parent')),
+          auth$: sources.auth$.startWith(PROVIDERS.google),
+        }),
+        sinksContract: function checkMSinksContracts() {return true}
+
+      }, testSettings, [childComponent1, childComponent2])
+
+      const testSources = makeTestSources(['DOM', 'auth$', 'a', 'b', 'c', 'd', 'e'])
+
+      const vNodes = [
+        div('.parent', [
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'bold'}}, 'child1-a-0'),
+          ]),
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'italic'}}, 'child2-a-0'),
+          ]),
+        ]),
+        div('.parent', [
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'bold'}}, 'child1-a-1'),
+          ]),
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'italic'}}, 'child2-a-0'),
+          ]),
+        ]),
+        div('.parent', [
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'bold'}}, 'child1-a-1'),
+          ]),
+          h('div', {}, [
+            h('span', {style: {fontWeight: 'italic'}}, 'child2-a-1'),
+          ]),
+        ]),
+      ]
+
+      function analyzeTestResults(actual, expected, message) {
+        assert.deepEqual(actual, expected, message)
+        done()
+      }
+
+      /** @type TestCase */
+      const testCase = {
+        inputs: {
+          auth$: {diagram: 'a|', values: {a: 'auth-0'}},
+          a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
+          b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}},
+          c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}},
+          d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}},
+          e: {diagram: 'a|', values: {a: 'e-0'}},
+        },
+        expected: {
+          DOM: {
+            outputs: vNodes,
+            successMessage: 'sink DOM produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+          auth$: {
+            outputs: ["google", "auth-0"],
+            successMessage: 'sink auth$ produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+          a: {
+            outputs: [
+              "child1-a-b-0",
+              "child2-a-d-0",
+              "child1-a-b-1",
+              "child1-a-b-2",
+              "child2-a-d-2"
+            ],
+            successMessage: 'sink a produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+          },
+          c: {
+            outputs: ["child1-c-c-0", "child1-c-c-1", "child1-c-c-2"],
+            successMessage: 'sink c produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+          d: {
+            outputs: ["child2-e-e-0"],
+            successMessage: 'sink d produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+        }
+      }
+
+      const testFn = mComponent
+
+      runTestScenario(testSources, testCase, testFn, {
+        timeUnit: 50,
+        waitForFinishDelay: 100
+      })
+
+    })
+
+
   QUnit.test(
-    "m(component_def, settings, children) : main cases - only children components",
+    "main cases - only children components",
     function exec_test(assert) {
       let done = assert.async(4)
 
@@ -157,7 +290,7 @@ define(function (require) {
 
     })
 
-  QUnit.test("m(component_def, settings, children) : main cases - no children", function exec_test(assert) {
+  QUnit.test("main cases - no children", function exec_test(assert) {
     let done = assert.async(5)
 
     // Test input 4
@@ -230,7 +363,7 @@ define(function (require) {
         childrenSinks$: $.of(childrenSinks),
         settings$: $.of(settings),
       }),
-      sinksContract: [function checkMSinksContracts() {return true}]
+      sinksContract: function checkMSinksContracts() {return true}
     }, null, [])
 
     const testSources = {
@@ -297,7 +430,7 @@ define(function (require) {
   })
 
   QUnit.test(
-    "m(component_def, settings, children) : main cases - children components and parent component - default merge",
+    "main cases - children components and parent component - default merge",
     function exec_test(assert) {
       let done = assert.async(5)
 
@@ -335,7 +468,7 @@ define(function (require) {
           DOM: $.of(div('.parent')),
           auth$: sources.auth$.startWith(PROVIDERS.google),
         }),
-        sinksContract: [function checkMSinksContracts() {return true}]
+        sinksContract: function checkMSinksContracts() {return true}
 
       }, testSettings, [childComponent1, childComponent2])
 
@@ -432,7 +565,7 @@ define(function (require) {
     })
 
   QUnit.test(
-    "m(component_def, settings, children) : main cases - children components and parent component - customized merge",
+    "main cases - children components and parent component - customized merge",
     function exec_test(assert) {
       let done = assert.async(5)
 
@@ -474,7 +607,7 @@ define(function (require) {
           childrenSinks$: $.merge(projectSinksOn('DOM', childrenSinks)),
           settings$: $.of(settings),
         }),
-        sinksContract: [function checkMSinksContracts() {return true}]
+        sinksContract: function checkMSinksContracts() {return true}
 
       }, testSettings, [childComponent1, childComponent2])
 
