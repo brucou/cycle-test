@@ -31,42 +31,53 @@ function require_util(Rx, $, R, Sdom) {
   const isNil = R.isNil
   const uniq = R.uniq
 
+  /**
+   * @typedef {Object.<string, Observable>} Sources
+   */
+  /**
+   * @typedef {Object.<string, Observable>} Sinks
+   * NOTE : this type def is not perfect as we allow sometimes null values
+   */
+  /**
+   * @typedef {?Object.<string, ?Object>} Settings
+   */
+  /**
+   * @typedef {Object} ComponentDef
+   * @property {?function(Sources, Settings)} makeLocalSources
+   * @property {?function(Settings)} makeLocalSettings
+   * @property {?function(Sources, Settings)} makeOwnSinks
+   * @property {function(Sinks, Sinks, Settings)} mergeSinks
+   * @property {function(Sinks):Boolean} sinksContract
+   */
+  /**
+   * @typedef {function(Sources, Settings):Sinks} Component
+   */
+  /**
+   * Returns a component specified by :
+   * - a component definition object (nullable)
+   * - settings (nullable)
+   * - children components
+   * Component definition default properties :
+   * - mergeAllSinks :
+   *   - DOM : mergeDOMSinksDefault
+   *   - non-DOM : mergeNonDOMSinksDefault
+   * - sinksContract : check all sinks are observables or `null`
+   * - makeLocalSources : -> null
+   * - makeLocalSettings : -> null
+   * - makeOwnSinks : -> null
+   * That component computes its sinks from its sources by:
+   * - merging current sources with extra sources if any
+   * - creating some sinks by itself
+   * - computing children sinks by executing the children components on the
+   * merged sources
+   * - merging its own computed sinks with the children computed sinks
+   * @param {?ComponentDef} componentDef
+   * @param {?Object} _settings
+   * @param {Array<Component>} children
+   * @returns {Component}
+   * @throws when type- and user-specified contracts are not satisfied
+   */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
-  // Returns a component (:: Sources -> Settings -> Sinks)
-  // which adds extra sources and merges sinks from children with own sinks
-  // Component_Def have default values :
-  // - mergeAllSinks : (DOM -> mergeDOMSinksDefault, default -> mergeNonDOMSinksDefault)
-  // - sinksContract : check all sinks are observables, and there is at least one sink returned
-  // - makeOwnSinks : -> null
-  // - makeLocalSources : -> null
-  // - makeLocalSettings : -> null
-  // Settings can be null/undefined
-  // Test cases
-  // 1 No children, no settings, no component_def
-  //   + throws an exception (if no component_def there must be at least children)
-  // 2 children: [component (sink DOM, auth, route), component(sink DOM, auth, queue)], settings : {...}, limited component def (only settings)
-  //   + output.sinks = children component sinks merged with default values of the component_def
-  //   + i.e. sinkNames = [DOM, auth, route, queue], DOM is merged with default,
-  //     auth is merged with both, queue, route merged with 1
-  //   + settings are taken into account (have all of the sinks depend on settings differently)
-  // 3 No children, settings : {}, full component def(sink DOM, auth, queue, extra source user$)
-  //   using the extra sources created
-  //   + output.sinks = component sinks merged according to component specs (are there, no other
-  //     sinks and emit the expected values)
-  //   + i.e. extra sources taken into account, settings taken into account
-  // 4 children: [component, component], settings : {...}, full component def (DOM, queue, auth, action)
-  //   + children 1 component sinks (DOM, route, queue, action)
-  //   + children 2 component sinks (DOM, auth, queue, isMobile)
-  //   + i.e.
-  //     - DOM in all sinks, one non-DOM sinkname in all sinks (queue)
-  //     - one children sink in one children only for each children and parent component (auth, action)
-  //     - one children sink in one children only (i.e not in parent) -> (route, isMobile)
-  // 4 TODO : children x settings x component_def
-  //   TODO : children: null, [], [component], [component, component]
-  //   TODO : settings: null, {}, {key: value}
-  //   TODO : 4x3x7 -> 84 tests!!! cut through the branches with the null and {} values out?
-  //   TODO : turn it into 4 + 3 + 3 = 10 tests
-
   function m(componentDef, _settings, children) {
     // check inputs against expected types
     const mSignature = [
@@ -79,8 +90,8 @@ function require_util(Rx, $, R, Sdom) {
 
     return function m(sources, innerSettings) {
       const settings = mergeR(_settings, innerSettings)
-      const makeLocalSources = componentDef.makeLocalSources || identity
-      const makeLocalSettings = componentDef.makeLocalSettings || identity
+      const makeLocalSources = componentDef.makeLocalSources || always(null)
+      const makeLocalSettings = componentDef.makeLocalSettings || always(null)
       const makeOwnSinks = componentDef.makeOwnSinks || always(null)
       const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
       const sinksContract = componentDef.sinksContract || always(true)
@@ -98,7 +109,7 @@ function require_util(Rx, $, R, Sdom) {
 
       const ownSinks = makeOwnSinks(extendedSources, localSettings)
       const childrenSinks = mapR(
-          childComponent => childComponent(extendedSources, localSettings),
+        childComponent => childComponent(extendedSources, localSettings),
         children
       )
       assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
@@ -107,16 +118,18 @@ function require_util(Rx, $, R, Sdom) {
       // merge the sinks from children and one-s own...
       const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
       assertContract(isOptSinks, [reducedSinks], 'mergeSinks must return a hash of observable sink')
+
       // ... and make sure that the result follow the relevant contracts when defined...
       assertContract(sinksContract, [reducedSinks], 'fails custom contract ' + sinksContract.name)
 
-      assert_contracts(reducedSinks, sinksContract)
-
+      const tracedSinks = trace(reducedSinks, settings)
       // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
       // TODO : specify trace/debug/error generation information
-      // This would ensure that errors are automatically and systematically caught in the component where they occur, and not interrupting the application
-      //       implementation-wise, it might be necessary to add a `currentPath` parameter somewhere which carries the
-      //       current path down the tree
+      // This would ensure that errors are automatically and systematically
+      //       caught in the component where they occur, and not
+      //       interrupting the application implementation-wise, it might be
+      //       necessary to add a `currentPath` parameter somewhere which
+      //       carries the current path down the tree
       // TODO: sinks should ALWAYS be shareReplay-ed(1) automatically
       //       a priori, if we have a sharedReplay stream, it is always possible to ignore the replayed value
       //       with `skip(1)`, which could be turned into a new operator `skipReplay()` for the sake of clarity of intent
@@ -135,7 +148,6 @@ function require_util(Rx, $, R, Sdom) {
       //        be cold streams, this means they might loose incoming values
       //        before they are subscribed to. Can't think of a use case where
       //        that behavior is desirable.
-      const tracedSinks = trace(reducedSinks, settings)
 
       return tracedSinks
     }
@@ -143,7 +155,8 @@ function require_util(Rx, $, R, Sdom) {
 
   // BRC utils
   /**
-   * Throws an exception if the arguments parameter fail at least one validation rule
+   * Throws an exception if the arguments parameter fails at least one
+   * validation rule
    * Note that all arguments are mandatory, i.e. the function does not deal with
    * optional arguments
    * @param {String} fnName
@@ -230,7 +243,6 @@ function require_util(Rx, $, R, Sdom) {
         (!obj.mergeSinks || isFunction(obj.mergeSinks)) &&
         (!obj.sinksContract || isFunction(obj.sinksContract))
       )
-    // TODO : decide on the type of sinkContract
   }
 
   function isUndefined(obj) {
@@ -311,20 +323,10 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
-   * Throws an exception if the parameter `obj` fails at least one contract
-   * @param obj
-   * @param [Contract] contracts Array of contracts which must be satisfied
-   * @returns {boolean} True if all contracts are satisfied
-   */
-  function assert_contracts(obj, contracts) {
-    // TODO BRC
-    return true
-  }
-
-  /**
    * Adds `tap` logging/tracing information to all sinks
    * @param {Sinks} sinks
-   * @param {Settings} settings Settings with which the parent component is called
+   * @param {Settings} settings Settings with which the parent component is
+   * called
    * @returns {*}
    */
   function trace(sinks, settings) {
@@ -365,8 +367,8 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
-   * For each element object of the array, returns the indicated property of that
-   * object, if it exists, null otherwise.
+   * For each element object of the array, returns the indicated property of
+   * that object, if it exists, null otherwise.
    * For instance, `projectSinksOn('a', obj)` with obj :
    * - [{a: ..., b: ...}, {b:...}]
    * - result : [..., null]
@@ -396,7 +398,8 @@ function require_util(Rx, $, R, Sdom) {
     var parentDOMSink = parentSinks ? parentSinks.DOM : null
 
     // Edge case : none of the sinks have a DOM sink
-    // That should not be possible as we come here only when we detect a DOM sink
+    // That should not be possible as we come here only
+    // when we detect a DOM sink
     if (allDOMSinks.length === 0) {return null}
 
     return $.combineLatest(allDOMSinks)
