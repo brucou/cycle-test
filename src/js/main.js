@@ -53,4 +53,4 @@ define(function (require) {
   // NOTE : Implements a circular flow with : main(drivers(replayS)).subscribe(replayS)
   Cycle.run(main, drivers);
 
-});
+})

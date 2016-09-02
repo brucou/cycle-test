@@ -5,7 +5,7 @@ define(function (require) {
   const Sdom = require('cycle-snabbdom')
 
   return require_util(Rx, $, R, Sdom);
-});
+})
 
 function require_util(Rx, $, R, Sdom) {
   const h = Sdom.h
@@ -13,7 +13,6 @@ function require_util(Rx, $, R, Sdom) {
   const span = Sdom.span
 
   const mapR = R.map
-  const mapAccum = R.mapAccum
   const mapObjIndexed = R.mapObjIndexed
   const mapIndexed = R.addIndex(R.map)
   const mergeR = R.merge
@@ -21,12 +20,9 @@ function require_util(Rx, $, R, Sdom) {
   const eitherR = R.either
   const flatten = R.flatten
   const allR = R.all
-  const forEach = R.forEach
   const keys = R.keys
   const reduceR = R.reduce
   const always = R.always
-  const or = R.or
-  const identity = R.identity
   const reject = R.reject
   const isNil = R.isNil
   const uniq = R.uniq
@@ -42,11 +38,18 @@ function require_util(Rx, $, R, Sdom) {
    * @typedef {?Object.<string, ?Object>} Settings
    */
   /**
-   * @typedef {Object} ComponentDef
+   * @typedef {Object} DetailedComponentDef
    * @property {?function(Sources, Settings)} makeLocalSources
    * @property {?function(Settings)} makeLocalSettings
    * @property {?function(Sources, Settings)} makeOwnSinks
    * @property {function(Sinks, Sinks, Settings)} mergeSinks
+   * @property {function(Sinks):Boolean} sinksContract
+   */
+  /**
+   * @typedef {Object} ShortComponentDef
+   * @property {?function(Sources, Settings)} makeLocalSources
+   * @property {?function(Settings)} makeLocalSettings
+   * @property {function(Sources, Settings)} makeAllSinks
    * @property {function(Sinks):Boolean} sinksContract
    */
   /**
@@ -71,7 +74,7 @@ function require_util(Rx, $, R, Sdom) {
    * - computing children sinks by executing the children components on the
    * merged sources
    * - merging its own computed sinks with the children computed sinks
-   * @param {?ComponentDef} componentDef
+   * @param {?(DetailedComponentDef|ShortComponentDef)} componentDef
    * @param {?Object} _settings
    * @param {Array<Component>} children
    * @returns {Component}
@@ -89,6 +92,7 @@ function require_util(Rx, $, R, Sdom) {
     assertSignature('m', arguments, mSignature)
 
     return function m(sources, innerSettings) {
+      // TODO add case makeAllSinks
       const settings = mergeR(_settings, innerSettings)
       const makeLocalSources = componentDef.makeLocalSources || always(null)
       const makeLocalSettings = componentDef.makeLocalSettings || always(null)
@@ -153,7 +157,6 @@ function require_util(Rx, $, R, Sdom) {
     }
   }
 
-  // BRC utils
   /**
    * Throws an exception if the arguments parameter fails at least one
    * validation rule
@@ -381,6 +384,30 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
+   * Returns an array with the set of sink names extracted from an array of
+   * sinks. The ordering of those names should not be relied on.
+   * For instance:
+   * - [{DOM, auth},{DOM, route}]
+   * results in ['DOM','auth','route']
+   * @param {Array<Sinks>} aSinks
+   * @returns {Array<String>}
+   */
+  function getSinkNamesFromSinksArray(aSinks) {
+    return uniq(flatten(mapR(getValidKeys, aSinks)))
+  }
+
+  function getValidKeys(obj) {
+    let validKeys = []
+    mapObjIndexed((value, key) => {
+      if (value != null) {
+        validKeys.push(key)
+      }
+    }, obj)
+
+    return validKeys
+  }
+
+  /**
    * Merges the DOM nodes produced by a parent component with the DOM nodes
    * produced by children components, such that the parent DOM nodes
    * wrap around the children DOM nodes
@@ -443,7 +470,7 @@ function require_util(Rx, $, R, Sdom) {
    */
   function mergeSinksDefault(parentSinks, childrenSinks, settings) {
     const allSinks = flatten(removeNullsFromArray([parentSinks, childrenSinks]))
-    const sinkNames = uniq(flatten(mapR(keys, allSinks)))
+    const sinkNames = getSinkNamesFromSinksArray(allSinks)
 
     return reduceR(
       // Note : default merge does not make use of the settings!
@@ -565,6 +592,7 @@ function require_util(Rx, $, R, Sdom) {
     assertSignature: assertSignature,
     assertContract: assertContract,
     projectSinksOn: projectSinksOn,
+    getSinkNamesFromSinksArray: getSinkNamesFromSinksArray,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,
