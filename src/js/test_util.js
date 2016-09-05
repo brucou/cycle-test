@@ -83,7 +83,8 @@ function require_test_utils(Rx, $, R, U) {
   // test execution helpers
   function makeTestSources(aSourceNames) {
     return reduceR((accTestSources, sourceName) => {
-      accTestSources[sourceName] = new Rx.ReplaySubject(1)
+      accTestSources[sourceName] = new Rx.Subject()
+      // TODO : change the factory method : could perfectly be replay or not
       return accTestSources
     }, {}, aSourceNames)
   }
@@ -101,8 +102,8 @@ function require_test_utils(Rx, $, R, U) {
         sequence.diagram,
         {values: sequence.values, timeUnit: timeUnit}
       )
-        // shared as it will be subscribed several times
-        // in different places
+      // shared as it will be subscribed several times
+      // in different places
         .share()
 
       // wire the inputs of that source to the corresponding subject
@@ -132,7 +133,7 @@ function require_test_utils(Rx, $, R, U) {
 
           return accumulatedResults;
         }, [])
-        .do(rxlog('Transformed results for sink ' + sinkName + ' :'))
+        //        .do(rxlog('Transformed results for sink ' + sinkName + ' :'))
         // Give it some time to process the inputs,
         // after the inputs have finished being emitted
         // That's arbitrary, keep it in mind that the testing helper
@@ -158,12 +159,12 @@ function require_test_utils(Rx, $, R, U) {
       const analyzeTestResultsFn = expected.analyzeTestResults
 
       return sinkResults$
-        // `analyzeTestResultsFn` should include `assert` which
-        // throw if the test fails
+      // `analyzeTestResultsFn` should include `assert` which
+      // throw if the test fails
         .tap(analyzeTestResultsCurried(
           analyzeTestResultsFn, expectedResults, successMessage
+          )
         )
-      )
     }
   }
 
@@ -246,10 +247,10 @@ function require_test_utils(Rx, $, R, U) {
     // which generate the execution of the test assertions
     $.merge(valuesR(resultAnalysis))
       .subscribe(
-      rxlog('Test completed for sink:'),
-      rxlog('An error occurred while executing test!'),
-      rxlog('Tests completed!')
-    )
+        rxlog('Test completed for sink:'),
+        rxlog('An error occurred while executing test!'),
+        rxlog('Tests completed!')
+      )
   }
 
   return {

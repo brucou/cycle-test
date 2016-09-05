@@ -12,6 +12,7 @@ function require_util(Rx, $, R, Sdom) {
   const div = Sdom.div
   const span = Sdom.span
 
+  const cloneR = R.clone
   const mapR = R.map
   const mapObjIndexed = R.mapObjIndexed
   const mapIndexed = R.addIndex(R.map)
@@ -25,6 +26,7 @@ function require_util(Rx, $, R, Sdom) {
   const always = R.always
   const reject = R.reject
   const isNil = R.isNil
+  const complement = R.complement
   const uniq = R.uniq
 
   /**
@@ -44,13 +46,15 @@ function require_util(Rx, $, R, Sdom) {
    * @property {?function(Sources, Settings)} makeOwnSinks
    * @property {function(Sinks, Sinks, Settings)} mergeSinks
    * @property {function(Sinks):Boolean} sinksContract
+   * @property {function(Sources):Boolean} sourcesContract
    */
   /**
    * @typedef {Object} ShortComponentDef
    * @property {?function(Sources, Settings)} makeLocalSources
    * @property {?function(Settings)} makeLocalSettings
-   * @property {function(Sources, Settings)} makeAllSinks
+   * @property {function(Sources, Settings, Array<Component>)} makeAllSinks
    * @property {function(Sinks):Boolean} sinksContract
+   * @property {function(Sources):Boolean} sourcesContract
    */
   /**
    * @typedef {function(Sources, Settings):Sinks} Component
@@ -74,6 +78,13 @@ function require_util(Rx, $, R, Sdom) {
    * - computing children sinks by executing the children components on the
    * merged sources
    * - merging its own computed sinks with the children computed sinks
+   * There are two version of definition, according to the level of
+   * granularity desired : the short spec and the detailed spec :
+   * - short spec :
+   *   one function `makeAllSinks` which outputs the sinks from the sources,
+   *   settings and children components
+   * - detailed spec :
+   *   several properties as detailed above
    * @param {?(DetailedComponentDef|ShortComponentDef)} componentDef
    * @param {?Object} _settings
    * @param {Array<Component>} children
@@ -82,7 +93,7 @@ function require_util(Rx, $, R, Sdom) {
    */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
-    // check inputs against expected types
+    // check signature
     const mSignature = [
       {componentDef: isNullableComponentDef},
       {settings: isNullableObject},
@@ -91,69 +102,91 @@ function require_util(Rx, $, R, Sdom) {
 
     assertSignature('m', arguments, mSignature)
 
-    return function m(sources, innerSettings) {
-      // TODO add case makeAllSinks
-      const settings = mergeR(_settings, innerSettings)
-      const makeLocalSources = componentDef.makeLocalSources || always(null)
-      const makeLocalSettings = componentDef.makeLocalSettings || always(null)
-      const makeOwnSinks = componentDef.makeOwnSinks || always(null)
-      const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
-      const sinksContract = componentDef.sinksContract || always(true)
+    const makeLocalSources = componentDef.makeLocalSources || always(null)
+    const makeLocalSettings = componentDef.makeLocalSettings || always(null)
+    const makeOwnSinks = componentDef.makeOwnSinks || always(null)
+    const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
+    const sinksContract = componentDef.sinksContract || always(true)
+    const sourcesContract = componentDef.sourcesContract || always(true)
+    // TODO : add a settingsContract - can be used for components with
+    // mandatory settings
 
-      // Computes and MERGES the extra sources which will be passed
-      // to the children and this component
-      // Extra sources are derived from the `sources`
-      // received as input, which remain untouched
-      const extendedSources = shareAllSources(
-        mergeR(sources, makeLocalSources(sources, settings))
-      )
-      // Note that per `mergeR` ramda spec. the second object's values
-      // replace those from the first in case of key conflict
-      const localSettings = mergeR(settings, makeLocalSettings(settings))
+    if (componentDef.makeAllSinks) {
+      return function m(sources, innerSettings) {
+        assertSourcesContracts(sources, sourcesContract)
 
-      const ownSinks = makeOwnSinks(extendedSources, localSettings)
-      const childrenSinks = mapR(
-        childComponent => childComponent(extendedSources, localSettings),
-        children
-      )
-      assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
-      assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
+        const mergedSettings = mergeR(_settings, innerSettings)
 
-      // merge the sinks from children and one-s own...
-      const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
-      assertContract(isOptSinks, [reducedSinks], 'mergeSinks must return a hash of observable sink')
+        let sinks = componentDef.makeAllSinks(sources, mergedSettings, children)
+        assertSinksContracts(sources, sinksContract)
 
-      // ... and make sure that the result follow the relevant contracts when defined...
-      assertContract(sinksContract, [reducedSinks], 'fails custom contract ' + sinksContract.name)
+        // TODO : factor out the trace too so I don't duplicate it
+        const tracedSinks = trace(sinks, mergedSettings)
+        return tracedSinks
+      }
+    }
+    else {
+      return function m(sources, innerSettings) {
+        const mergedSettings = mergeR(_settings, innerSettings)
 
-      const tracedSinks = trace(reducedSinks, settings)
-      // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
-      // TODO : specify trace/debug/error generation information
-      // This would ensure that errors are automatically and systematically
-      //       caught in the component where they occur, and not
-      //       interrupting the application implementation-wise, it might be
-      //       necessary to add a `currentPath` parameter somewhere which
-      //       carries the current path down the tree
-      // TODO: sinks should ALWAYS be shareReplay-ed(1) automatically
-      //       a priori, if we have a sharedReplay stream, it is always possible to ignore the replayed value
-      //       with `skip(1)`, which could be turned into a new operator `skipReplay()` for the sake of clarity of intent
-      //       but it is not possible to get the last value of a stream if not sharedReplayed beforehand,
-      //       unless $.combineLatest is used. So it is probably safer to always replay sinks
-      // TODO : sources should ALWAYS be shared as we don't know how many children will read from it
-      //        A source might have to be share-replayed (if it represents a behavior),
-      //        in which case at `makeLocalSources` level, a replay instruction can be added.
-      //        If possible detect first if the source is `sharedReplay` before
-      //        adding `share()` to it. I can't think of a case where a source
-      //        MUST NOT be shared. Top-level sources are subjects,
-      //        hence they are hot streams by nature. Local sources are built
-      //        from top-level sources, and they end up in the global sinks
-      //        where the top-level sources are connected. When top-level
-      //        sources are connected, the local sources also are. If they would
-      //        be cold streams, this means they might loose incoming values
-      //        before they are subscribed to. Can't think of a use case where
-      //        that behavior is desirable.
+        assertSourcesContracts(sources, sourcesContract)
 
-      return tracedSinks
+        // Computes and MERGES the extra sources which will be passed
+        // to the children and this component
+        // Extra sources are derived from the `sources`
+        // received as input, which remain untouched
+        const extendedSources = shareAllSources(
+          mergeR(sources, makeLocalSources(sources, mergedSettings))
+        )
+        // Note that per `mergeR` ramda spec. the second object's values
+        // replace those from the first in case of key conflict
+        const localSettings = mergeR(
+          mergedSettings,
+          makeLocalSettings(mergedSettings)
+        )
+
+        const ownSinks = makeOwnSinks(extendedSources, localSettings)
+        const childrenSinks = mapR(
+          childComponent => childComponent(extendedSources, localSettings),
+          children
+        )
+        assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
+        assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
+
+        // merge the sinks from children and one-s own...
+        const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
+
+        assertSinksContracts(reducedSinks, sinksContract)
+
+        const tracedSinks = trace(reducedSinks, mergedSettings)
+        // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
+        // TODO : specify trace/debug/error generation information
+        // This would ensure that errors are automatically and systematically
+        //       caught in the component where they occur, and not
+        //       interrupting the application implementation-wise, it might be
+        //       necessary to add a `currentPath` parameter somewhere which
+        //       carries the current path down the tree
+        // TODO: sinks should ALWAYS be shareReplay-ed(1) automatically
+        //       a priori, if we have a sharedReplay stream, it is always possible to ignore the replayed value
+        //       with `skip(1)`, which could be turned into a new operator `skipReplay()` for the sake of clarity of intent
+        //       but it is not possible to get the last value of a stream if not sharedReplayed beforehand,
+        //       unless $.combineLatest is used. So it is probably safer to always replay sinks
+        // TODO : sources should ALWAYS be shared as we don't know how many children will read from it
+        //        A source might have to be share-replayed (if it represents a behavior),
+        //        in which case at `makeLocalSources` level, a replay instruction can be added.
+        //        If possible detect first if the source is `sharedReplay` before
+        //        adding `share()` to it. I can't think of a case where a source
+        //        MUST NOT be shared. Top-level sources are subjects,
+        //        hence they are hot streams by nature. Local sources are built
+        //        from top-level sources, and they end up in the global sinks
+        //        where the top-level sources are connected. When top-level
+        //        sources are connected, the local sources also are. If they would
+        //        be cold streams, this means they might loose incoming values
+        //        before they are subscribed to. Can't think of a use case where
+        //        that behavior is desirable.
+
+        return tracedSinks
+      }
     }
   }
 
@@ -178,7 +211,6 @@ function require_util(Rx, $, R, Sdom) {
     const ruleFns = flatten(mapR(function (vRule) {
       return valuesR(vRule)[0]
     }, vRules))
-    console.warn('assertSignature: argNames', argNames)
 
     const args = mapIndexed(function (vRule, index) {
       return _arguments[index]
@@ -225,6 +257,7 @@ function require_util(Rx, $, R, Sdom) {
     return true
   }
 
+  // TODO : express all these with ramda is, isNil, isArrayLike
   /**
    * Returns true iff the passed parameter is null or undefined OR a POJO
    * @param {Object} obj
@@ -253,7 +286,7 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   function isFunction(obj) {
-    return typeof(obj) == 'function'
+    return typeof(obj) === 'function'
   }
 
   function isObject(obj) {
@@ -304,6 +337,17 @@ function require_util(Rx, $, R, Sdom) {
     return isFunction(obj.subscribe)
   }
 
+  function isSources(obj) {
+    // We check the minimal contract which is not to be nil
+    // In `cycle`, sources can have both regular
+    // objects and observables (sign that the design could be improved).
+    // Regular objects are injected dependencies (DOM, router?) which
+    // are initialized in the drivers, and should be separated from
+    // `sources`. `sources` could then have an homogeneous type which
+    // could be checked properly
+    return complement(isNil(obj))
+  }
+
   function isOptSinks(obj) {
     // obj can be null
     return !obj || allR(eitherR(isUndefined, isObservable), valuesR(obj))
@@ -311,6 +355,23 @@ function require_util(Rx, $, R, Sdom) {
 
   function isArrayOptSinks(arrSinks) {
     return mapR(isOptSinks, arrSinks)
+  }
+
+  function assertSourcesContracts(sources, sourcesContract) {
+    // Check sources contracts
+    assertContract(isSources, [sources],
+      'm : `sources` parameter is invalid')
+    // TODO : documentation - contract for sources could :
+    // - check that specific sources are included, and/or observable
+    assertContract(sourcesContract, [sources], 'm: `sources`' +
+      ' parameter fails contract ' + sourcesContract.name)
+  }
+
+  function assertSinksContracts(sinks, sinksContract) {
+    assertContract(isOptSinks, [sinks],
+      'mergeSinks must return a hash of observable sink')
+    assertContract(sinksContract, [sinks],
+      'fails custom contract ' + sinksContract.name)
   }
 
   /**
@@ -341,19 +402,11 @@ function require_util(Rx, $, R, Sdom) {
     return reject(isNil, arr)
   }
 
-  function cloneVNode(vNode) {
-    let clone = {}
-    mapR(x => clone[x] = vNode[x],
-      ['sel', 'data', 'children', 'text', 'elm', 'key']
-    )
-    return clone
-  }
-
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
       if (parentDOMSink) {
         // Case : the parent sinks have a DOM sink
-        let parentVNode = cloneVNode(arrayVNode.shift())
+        let parentVNode = cloneR(arrayVNode.shift())
         let childrenVNode = arrayVNode
         parentVNode.children = parentVNode.children || []
         // Add the children vNodes produced by the children sinks
@@ -582,7 +635,7 @@ function require_util(Rx, $, R, Sdom) {
         }
       })
       .timeInterval()
-      .tap(console.log.bind(console, 'flatMap'))
+      .tap(console.log.bind(console, 'emitting test input:'))
       .pluck('value')
   }
 

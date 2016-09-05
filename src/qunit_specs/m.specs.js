@@ -4,6 +4,7 @@ define(function (require) {
   const Rx = require('rx')
   const $ = Rx.Observable
   const Sdom = require('cycle-snabbdom')
+
   const h = Sdom.h
   const div = Sdom.div
   const span = Sdom.span
