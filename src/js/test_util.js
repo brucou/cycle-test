@@ -42,6 +42,7 @@ function require_test_utils(Rx, $, R, U) {
   const reduceR = R.reduce
   const keysR = R.keys
   const mapR = R.map
+  const drop = R.drop
   const always = R.always
   const rxlog = function (label) {return console.warn.bind(console, label)}
   const isOptSinks = U.isOptSinks
@@ -70,7 +71,8 @@ function require_test_utils(Rx, $, R, U) {
   }
 
   function hasTestCaseForEachSink(testCase, sinkNames) {
-    return allR(sinkName => testCase[sinkName], sinkNames)
+    const _sinkNames = drop(1, sinkNames)
+    return allR(sinkName => testCase[sinkName], _sinkNames)
   }
 
   //////
@@ -147,7 +149,13 @@ function require_test_utils(Rx, $, R, U) {
 
   function analyzeTestResults(testExpectedOutputs) {
     return function analyzeTestResults(sinkResults$, sinkName) {
-      const expected = testExpectedOutputs[sinkName]
+      const expected = (sinkName !== '_fake') ?
+        testExpectedOutputs[sinkName] :
+      {
+        outputs: [],
+        successMessage: 'fakeSink',
+        analyzeTestResults: always(true)
+      }
       const expectedResults = expected.outputs
       const successMessage = expected.successMessage
       const analyzeTestResultsFn = expected.analyzeTestResults

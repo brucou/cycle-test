@@ -38,6 +38,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const uniq = R.uniq
   const omit = R.omit
   const pathR = R.path
+  const prepend = R.prepend
 
   // TODO : I cannot do it with the current componentDef, I need to add a function
   // which takes the execution of the children into its hand
@@ -87,7 +88,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     // TODO : check that the mergeR works as expected and route$ will be the
     // new one
-    const sinkNames = settings.sinkNames
+    const sinkNames = prepend('_fake', settings.sinkNames)
     // TODO : check that sinkNames is defined (mandatory!!)
     // TODO : check that route is a string and not empty
     let route$ = sources[routeSourceName]
@@ -120,7 +121,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
             if (params != null) {
               // compute the children components sinks if not done already
               if (!cachedSinks) {
-                console.info('computing children components sinks', params)
+                console.info('computing children components sinks for sink ', sinkName, params)
                 const componentFromChildren = m({
                     makeLocalSources: function (sources) {
                       return {
@@ -145,6 +146,8 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
                 $.empty()
             }
             else {
+              console.log('params is null!!! no match for this component on' +
+                ' this route')
               return $.empty()
             }
           })

@@ -55,8 +55,9 @@ define(function (require) {
       [childComponent1, childComponent2])
 
     const inputs = [
-      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d--e--f-'}},
-      {DOM2: {diagram: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
+      {_fake: {diagram: '-'}},
+      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d-e-f-'}},
       {
         userAction$: {
           diagram: 'a---b-ac--ab---c',
@@ -67,13 +68,14 @@ define(function (require) {
         route$: {
           //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
           //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
-          diagram: '-a---b--cd-e--f', values: {
+          diagram: '-a---b--cdef--g', values: {
             a: 'bruno/1',
             b: 'ted',
             c: 'bruno/2',
             d: 'bruno/2/remainder',
-            e: 'bruno/3/bigger/remainder',
-            f: 'paul',
+            e: 'bruno/2/remainder',
+            f: 'bruno/3/bigger/remainder',
+            g: 'paul',
           }
         }
       }
