@@ -8,7 +8,7 @@ define(function (require) {
   const div = Sdom.div
   const span = Sdom.span
   const tutils = require('test_util')
-  const runTestScenario = tutils.runTestScenario
+  const runTestScenario = tutils._runTestScenario
   const m = U.m
   const mapR = R.map
   const reduceR = R.reduce

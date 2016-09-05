@@ -24,7 +24,7 @@ define(function (require) {
 
     const childComponent1 = function childComponent1(sources, settings) {
       return {
-        DOM: $.interval(40).take(4)
+        DOM: sources.DOM1.take(4)
           .tap(console.warn.bind(console, 'DOM : component 1: '))
           .map(x => h('span', {},
             'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
@@ -38,7 +38,7 @@ define(function (require) {
     }
     const childComponent2 = function childComponent1(sources, settings) {
       return {
-        DOM: $.interval(20).take(4)
+        DOM: sources.DOM2.take(4)
           .tap(console.warn.bind(console, 'DOM : component 2: '))
           .map(x => h('span', {},
             'Component 2 : id=' + settings.routeParams.id + ' - ' + x))
@@ -54,87 +54,115 @@ define(function (require) {
       {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
       [childComponent1, childComponent2])
 
-    const testSources = makeTestSources(
-      ['DOM', 'route$', 'userAction$']
-    )
+    const inputs = [
+      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d--e--f-'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
+      {
+        userAction$: {
+          diagram: 'a---b-ac--ab---c',
+          values: {a: 'click', b: 'select', c: 'hover',}
+        }
+      },
+      {
+        route$: {
+          //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
+          //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
+          diagram: '-a---b--cd-e--f', values: {
+            a: 'bruno/1',
+            b: 'ted',
+            c: 'bruno/2',
+            d: 'bruno/2/remainder',
+            e: 'bruno/3/bigger/remainder',
+            f: 'paul',
+          }
+        }
+      }
+    ]
 
-    const vNodes = []
+    function makeVNode(componentNum, id, x) {
+      return h('span', {},
+        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+    }
+
+    const vNodes = [
+      div([
+        makeVNode(1, 1, 'b'),
+        makeVNode(2, 1, 'b'),
+      ]),
+      div([
+        makeVNode(1, 1, 'b'),
+        makeVNode(2, 1, 'c'),
+      ]),
+      div([
+        makeVNode(1, 2, 'd'),
+        makeVNode(2, 2, 'e'),
+      ]),
+      div([
+        makeVNode(1, 2, 'd'),
+        makeVNode(2, 2, 'f'),
+      ]),
+      div([
+        makeVNode(1, 3, 'e'),
+        makeVNode(2, 3, 'a'),
+      ]),
+    ]
+
+    // TODO : adapter test a la nouvelle routine de test
+
+    /** @type TestResults */
+    const expected = {
+      DOM: {
+        outputs: vNodes,
+        successMessage: 'sink DOM produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      routeLog: {
+        outputs: [
+          "Component 1 - routeLog - bruno1",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
+          "Component 1 - routeLog - bruno3",
+          "Component2 - routeLog - routeRemainder: bigger/remainder"
+        ],
+        successMessage: 'sink routeLog produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      a: {
+        outputs: [
+          "Component1 - user action - select",
+          "Component1 - user action - click",
+          "Component1 - user action - select"
+        ],
+        successMessage: 'sink a produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      b: {
+        outputs: [
+          "Component2 - user action - select",
+          "Component2 - user action - click",
+          "Component2 - user action - select"
+        ],
+        successMessage: 'sink b produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+    }
 
     function analyzeTestResults(actual, expected, message) {
       assert.deepEqual(actual, expected, message)
       done()
     }
 
-    /** @type TestCase */
-    const testCase = {
-      inputs: {
-        userAction$: {
-          diagram: 'a---b-ac--ab--c', values: {
-            a: 'click',
-            b: 'select',
-            c: 'hover',
-          }
-        },
-        route$: {
-          diagram: '-a---b--cd-e-f', values: {
-            a: 'bruno/1',
-            b: 'ted',
-            c: 'bruno/2',
-            d: 'bruno/2/remainder',
-            e: 'bruno/3/remainder',
-            f: 'paul',
-          }
-        },
-      },
-      expected: {
-        DOM: {
-          outputs: vNodes,
-          successMessage: 'sink DOM produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        routeLog: {
-          outputs: [
-            "Component 1 - routeLog - bruno1",
-            "Component2 - routeLog - routeRemainder: undefined",
-            "Component 1 - routeLog - bruno2",
-            "Component2 - routeLog - routeRemainder: undefined",
-            "Component 1 - routeLog - bruno2",
-            "Component2 - routeLog - routeRemainder: remainder",
-            "Component 1 - routeLog - bruno3",
-            "Component2 - routeLog - routeRemainder: remainder"
-          ],
-          successMessage: 'sink routeLog produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        a: {
-          outputs: [
-            "Component1 - user action - select",
-            "Component1 - user action - click",
-            "Component1 - user action - select"
-          ],
-          successMessage: 'sink a produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        b: {
-          outputs: [
-            "Component2 - user action - select",
-            "Component2 - user action - click",
-            "Component2 - user action - select"
-          ],
-          successMessage: 'sink b produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-      }
-    }
-
     const testFn = mComponent
 
-    runTestScenario(testSources, testCase, testFn, {
-      timeUnit: 50,
+    runTestScenario(inputs, expected, testFn, {
+      tickDuration: 10,
       waitForFinishDelay: 100
     })
 

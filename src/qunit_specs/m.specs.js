@@ -9,7 +9,7 @@ define(function (require) {
   const div = Sdom.div
   const span = Sdom.span
   const tutils = require('test_util')
-  const runTestScenario = tutils.runTestScenario
+  const runTestScenario = tutils._runTestScenario
   const m = U.m
   const mapR = R.map
   const reduceR = R.reduce
@@ -127,7 +127,7 @@ define(function (require) {
         done()
       }
 
-      /** @type TestCase */
+      /** @type TestResults */
       const testCase = {
         inputs: {
           a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
@@ -264,7 +264,7 @@ define(function (require) {
       done()
     }
 
-    /** @type TestCase */
+    /** @type TestResults */
     const testCase = {
       inputs: {
         auth$: {diagram: '-a|', values: {a: PROVIDERS.facebook}},
@@ -394,7 +394,7 @@ define(function (require) {
         done()
       }
 
-      /** @type TestCase */
+      /** @type TestResults */
       const testCase = {
         inputs: {
           auth$: {diagram: 'a|', values: {a: 'auth-0'}},
@@ -517,7 +517,7 @@ define(function (require) {
         done()
       }
 
-      /** @type TestCase */
+      /** @type TestResults */
       const testCase = {
         inputs: {
           auth$: {diagram: 'a|', values: {a: 'auth-0'}},

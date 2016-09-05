@@ -120,7 +120,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
             if (params != null) {
               // compute the children components sinks if not done already
               if (!cachedSinks) {
-                console.info('computing children components sinks')
+                console.info('computing children components sinks', params)
                 const componentFromChildren = m({
                     makeLocalSources: function (sources) {
                       return {

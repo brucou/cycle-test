@@ -652,6 +652,7 @@ function require_util(Rx, $, R, Sdom) {
     isObject: isObject,
     isString: isString,
     isArray: isArray,
+    isArrayOf: isArrayOf,
     isObservable: isObservable,
     isOptSinks: isOptSinks,
   }

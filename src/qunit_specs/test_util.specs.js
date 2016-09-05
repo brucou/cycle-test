@@ -4,7 +4,6 @@ define(function (require) {
   const $ = Rx.Observable
   const tutils = require('test_util')
   const runTestScenario = tutils.runTestScenario
-  const runTestScenario2 = tutils.runTestScenario2
 
   QUnit.module("Testing runTestScenario helper", {});
 
@@ -23,7 +22,7 @@ define(function (require) {
         b: new Rx.ReplaySubject(1),
       }
 
-      /** @type TestCase */
+      /** @type TestResults */
       const testCase = {
         inputs: {
           a: {diagram: 'xy|', values: {x: 'a-0', y: 'a-1'}},
@@ -63,7 +62,7 @@ define(function (require) {
       })
     })
 
-  QUnit.test("runTestScenario2(inputs, testCase, testFn, settings) :" +
+  QUnit.test("runTestScenario(inputs, testCase, testFn, settings) :" +
     " Main case",
     function exec_test(assert) {
       let done = assert.async(3)
@@ -78,30 +77,29 @@ define(function (require) {
         {b: {diagram: 'xyz|', values: {x: 'b-0', y: 'b-1', z: 'b-2'}}},
       ]
 
-      /** @type TestCase */
+      /** @type TestResults */
         // TODO : change types, remove old runTestScenario, rename new
-      const testCase = {
-          expected: {
-            m: {
-              outputs: ['m-a-0', 'm-b-0', 'm-a-1', 'm-b-1', 'm-b-2'],
-              successMessage: 'sink m produces the expected values',
-              analyzeTestResults: analyzeTestResults,
-              transformFn: undefined,
-            },
-            n: {
-              outputs: ['t-n-a-0', 't-n-a-1'],
-              successMessage: 'sink n produces the expected values',
-              analyzeTestResults: analyzeTestResults,
-              transformFn: x => 't-' + x,
-            },
-            o: {
-              outputs: ['o-b-0', 'o-b-1', 'o-b-2'],
-              successMessage: 'sink o produces the expected values',
-              analyzeTestResults: analyzeTestResults,
-              transformFn: undefined,
-            }
+      const expected = {
+          m: {
+            outputs: ['m-a-0', 'm-b-0', 'm-a-1', 'm-b-1', 'm-b-2'],
+            successMessage: 'sink m produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
+          },
+          n: {
+            outputs: ['t-n-a-0', 't-n-a-1'],
+            successMessage: 'sink n produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: x => 't-' + x,
+          },
+          o: {
+            outputs: ['o-b-0', 'o-b-1', 'o-b-2'],
+            successMessage: 'sink o produces the expected values',
+            analyzeTestResults: analyzeTestResults,
+            transformFn: undefined,
           }
         }
+
 
       const testFn = sources => ({
         m: $.merge(sources.a, sources.b).map((x => 'm-' + x)),
@@ -109,7 +107,7 @@ define(function (require) {
         o: sources.b.delay(3).map(x => 'o-' + x)
       })
 
-      runTestScenario2(inputs, testCase, testFn, {
+      runTestScenario(inputs, expected, testFn, {
         tickDuration: 10,
         waitForFinishDelay: 30
       })

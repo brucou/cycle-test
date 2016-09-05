@@ -27,7 +27,7 @@ define(function (require) {
  * @property {!function (Array<Output>, Array<Output>), String} analyzeTestResults
  */
 /**
- * @typedef {Object} TestCase
+ * @typedef {Object} TestResults
  * @property {!Object.<string, Sequence>} inputs
  * @property {!Object.<string, ExpectedRecord>} expected
  */
@@ -53,20 +53,9 @@ function require_test_utils(Rx, $, R, U) {
 
   //////
   // Contract and signature checking helpers
-  function isTestCase(obj) {
-    return obj.inputs && isSequence(obj.inputs)
-      && obj.expected && isExpectedRecord(obj.expected)
-  }
-
-  function isSequence(obj) {
-    var isSeq = true;
-    mapObjIndexed((sequence, sourceName) => {
-      isSeq = isSeq &&
-        sequence.diagram && U.isString(sequence.diagram) &&
-        (!sequence.values || U.isObject(sequence.values))
-    }, obj)
-
-    return isSeq
+  function isSourceInput(obj) {
+    return obj && keysR(obj).length === 1
+      && U.isString(valuesR(obj)[0].diagram)
   }
 
   function isExpectedStruct(record) {
@@ -81,7 +70,7 @@ function require_test_utils(Rx, $, R, U) {
   }
 
   function hasTestCaseForEachSink(testCase, sinkNames) {
-    return allR(sinkName => testCase.expected[sinkName], sinkNames)
+    return allR(sinkName => testCase[sinkName], sinkNames)
   }
 
   //////
@@ -156,9 +145,9 @@ function require_test_utils(Rx, $, R, U) {
     }
   }
 
-  function analyzeTestResults(testCase) {
+  function analyzeTestResults(testExpectedOutputs) {
     return function analyzeTestResults(sinkResults$, sinkName) {
-      const expected = testCase.expected[sinkName]
+      const expected = testExpectedOutputs[sinkName]
       const expectedResults = expected.outputs
       const successMessage = expected.successMessage
       const analyzeTestResultsFn = expected.analyzeTestResults
@@ -173,11 +162,10 @@ function require_test_utils(Rx, $, R, U) {
     }
   }
 
-  function getTestResults(testInputs$, testCase, settings) {
+  function getTestResults(testInputs$, expected, settings) {
     const defaultWaitForFinishDelay = 50
     const waitForFinishDelay = settings.waitForFinishDelay
       || defaultWaitForFinishDelay
-    const expected = testCase.expected
 
     return function getTestResults(sink$, sinkName) {
       if (U.isUndefined(sink$)) {
@@ -225,7 +213,7 @@ function require_test_utils(Rx, $, R, U) {
     return mapR(function mapInputs(sourceInput) {
       return mapR(function projectDiagramAtIndex(input) {
         return {
-          diagram: input.diagram.trim()[tickNum],
+          diagram: input.diagram[tickNum],
           values: input.values
         }
       }, sourceInput)
@@ -236,87 +224,142 @@ function require_test_utils(Rx, $, R, U) {
   // Main functions
 
   /**
+   * Tests a function against sources' test input values and the expected
+   * values defined in a test case object.
+   * The function to test is executed, and its sinks collected. When there are
+   * no more inputs to send through the sources, output from each sink are
+   * collected in an array, then passed through a transform function.
+   * That transform function can be used to remove fields, which are irrelevant
+   * or non-reproducible (for instance timestamps), before comparison.
+   * Actual outputs for each sink are compared against expected outputs,
+   * by means of a `analyzeTestResults` function.
+   * That function can throw in case of failed assertion.
    *
-   * @param {Array<SourceInput>} inputs [{sourceName: {{diagram: string,
-    * values:*}}}]
-   * @param testCase - same but without inputs
-   * @param testFn - same
-   * @param opt - TODO
+   * @param {Array<SourceInput>} inputs
+   * @param {TestResults} expected Object which contains all the relevant data
+   * relevant to the test case : expected outputs, test message,
+   * comparison function, output transformation, etc.
+   * @param {function(Sources):Sinks} testFn Function to test
+   * @param {{timeUnit: Number, waitForFinishDelay: Number}} settings
+   * @throws
    */
-  function runTestScenario2(inputs, testCase, testFn, opt) {
-    const tickDuration = (opt && opt.tickDuration) ?
-      opt.tickDuration :
+  function runTestScenario(inputs, expected, testFn, settings) {
+    assertSignature('_runTestScenario', arguments, [
+      {inputs: U.isArrayOf(isSourceInput)},
+      {testCase: isExpectedRecord},
+      {testFn: U.isFunction},
+      {settings: U.isNullableObject},
+    ])
+
+    // Set default values if any
+    settings = settings || {}
+
+    const tickDuration = settings.tickDuration ?
+      settings.tickDuration :
       tickDurationDefault
 
-    // @type Object.<string, observable>
+    /** @type {Object.<string, observable>} */
+      // Create the subjects which will receive the input data
+      // There is a standard subject for each source declared in `inputs`
     let sourcesSubjects = reduceR(function makeSubjects(accSubjects, input) {
-      accSubjects[keysR(input)[0]] = new Rx.Subject()
-      return accSubjects
-    }, {}, inputs)
+        accSubjects[keysR(input)[0]] = new Rx.Subject()
+        return accSubjects
+      }, {}, inputs)
 
+    // Maximum length of input diagram strings
+    // Ex:
+    // a : '--x-x--'
+    // b : '-x-x-'
+    // -> maxLen = 7
     const maxLen = Math.max.apply(null,
       mapR(sourceInput => valuesR(sourceInput)[0].diagram.length, inputs)
     )
 
-    // @type Array<Number>
+    /** @type {Array<Number>} */
+      // Make an index array [0..maxLen] for iteration purposes
     const indexRange = mapIndexed((input, index) => index, new Array(maxLen))
 
-    // @type Observable<Nil>
+    /** @type Observable<Null>*/
+      // Make a single chained observable which :
+      // - waits some delay before starting to emit
+      // - then for n in [0..maxLen]
+      //   - emits the m values in position n in the input diagram, in `inputs`
+      // array order, `m` being the number of input sources
+      // wait for that emission to finish before nexting (`concat`)
+      // That way we ENSURE that :
+      // -a--
+      // -b--     if a and b are in the same vertical (emission time), they
+      // will always be emitted in the same order in every execution of the
+      // test scenario
+      // -a-
+      // b--      values that are chronologically further in the diagram will
+      // always be emitted later
+      // This allows to have predictable and consistent data when analyzing
+      // test results. That was not the case when using the `setTimeOut`
+      // scheduler to handle delays.
     const testInputs$ = reduceR(function makeInputs$(accEmitInputs$, tickNo) {
-      return accEmitInputs$
-        .delay(tickDuration)
-        .concat(
-          $.from(projectAtIndex(tickNo, inputs))
-            .do(function emitInputs(sourceInput) {
-              // input :: {sourceName : {{diagram : char, values: Array<*>}}
-              const sourceName = keysR(sourceInput)[0]
-              const input = sourceInput[sourceName]
-              const c = input.diagram
-              const values = input.values
-              const sourceSubject = sourcesSubjects[sourceName]
-              const errorVal = values['#'] || '#'
+        return accEmitInputs$
+          .delay(tickDuration)
+          .concat(
+            $.from(projectAtIndex(tickNo, inputs))
+              .do(function emitInputs(sourceInput) {
+                // input :: {sourceName : {{diagram : char, values: Array<*>}}
+                const sourceName = keysR(sourceInput)[0]
+                const input = sourceInput[sourceName]
+                const c = input.diagram
+                const values = input.values || {}
+                const sourceSubject = sourcesSubjects[sourceName]
+                const errorVal = (values && values['#']) || '#'
 
-              switch (c) {
-                case '-':
-                  console.log('- doing nothing')
-                  break;
-                case '#':
-                  sourceSubject.onError({data: errorVal})
-                  break;
-                case '|':
-                  sourceSubject.onCompleted()
-                  break;
-                default:
-                  const val = values.hasOwnProperty(c) ? values[c] : c;
-                  sourceSubject.onNext(val)
-                  break;
-              }
-            })
-        )
-    }, $.empty(), indexRange)
-      .share()
+                if (c) {
+                  // case when the diagram for that particular source is
+                  // finished but other sources might still go on
+                  // In any case, there is nothing to emit
+                  switch (c) {
+                    case '-':
+                      console.log('- doing nothing')
+                      break;
+                    case '#':
+                      sourceSubject.onError({data: errorVal})
+                      break;
+                    case '|':
+                      sourceSubject.onCompleted()
+                      break;
+                    default:
+                      const val = values.hasOwnProperty(c) ? values[c] : c;
+                      console.log('emitting for source ' + sourceName + ' ' + val)
+                      sourceSubject.onNext(val)
+                      break;
+                  }
+                }
+              })
+          )
+      }, $.empty(), indexRange)
+        .share()
 
     // execute the function to be tested (for example a cycle component)
+    // with the source subjects
     let testSinks = testFn(sourcesSubjects)
     if (!isOptSinks(testSinks)) {
       throw 'encountered a sink which is not an observable!'
     }
 
     /** @type {Object.<string, Observable<Array<Output>>>} */
+      // Gather the results in an array for easier processing
     const sinksResults = mapObjIndexed(
-      getTestResults(testInputs$, testCase, opt),
+      getTestResults(testInputs$, expected, settings),
       testSinks
-    )
+      )
 
-    assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
-      'runTestScenario : in testCase, could not find test inputs for all sinks!'
+    assertContract(hasTestCaseForEachSink, [expected, keysR(sinksResults)],
+      '_runTestScenario : in testCase, could not find test inputs for all sinks!'
     )
 
     // Side-effect : execute `analyzeTestResults` function which
     // makes use of `assert` and can lead to program interruption
     /** @type {Object.<string, Observable<Array<Output>>>} */
     const resultAnalysis = mapObjIndexed(
-      analyzeTestResults(testCase),
+      analyzeTestResults(expected),
       sinksResults
     )
 
@@ -329,7 +372,7 @@ function require_test_utils(Rx, $, R, U) {
         rxlog('Tests completed!')
       )
     testInputs$.subscribe(
-      rxlog('emitting inputs'),
+      function(){},
       rxlog('An error occurred while emitting test inputs'),
       rxlog('test inputs emitted')
     )
@@ -350,15 +393,15 @@ function require_test_utils(Rx, $, R, U) {
    * @param {Object.<string, Subject>} testSources hash of sources,
    * matching a source name with a subject (usually a `replaySubject(1)`
    * to reproduce cycle behaviour).
-   * @param {TestCase} testCase Object which contains all the relevant data
+   * @param {TestResults} testCase Object which contains all the relevant data
    * relevant to the test case : expected outputs, test message,
    * comparison function, output transformation, etc.
    * @param {function(Sources):Sinks} testFn Function to test
    * @param {{timeUnit: Number, waitForFinishDelay: Number}} settings
    * @throws
    */
-  function runTestScenario(testSources, testCase, testFn, settings) {
-    assertSignature('runTestScenario', arguments, [
+  function _runTestScenario(testSources, testCase, testFn, settings) {
+    assertSignature('_runTestScenario', arguments, [
       {testSources: U.isObject},
       {testCase: isTestCase},
       {testFn: U.isFunction},
@@ -396,7 +439,7 @@ function require_test_utils(Rx, $, R, U) {
     )
 
     assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
-      'runTestScenario : in testCase, could not find test inputs for all sinks!'
+      '_runTestScenario : in testCase, could not find test inputs for all sinks!'
     )
 
     // Side-effect : execute `analyzeTestResults` function which
@@ -419,7 +462,6 @@ function require_test_utils(Rx, $, R, U) {
 
   return {
     runTestScenario: runTestScenario,
-    runTestScenario2: runTestScenario2,
     makeTestSources: makeTestSources
   }
 }

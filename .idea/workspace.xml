@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js" line="87" mnemonic="0" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="caa98bca-618e-4536-aad9-cbad8a8c923b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/index.html" afterPath="$PROJECT_DIR$/src/index.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/js/components/Router.js" afterPath="$PROJECT_DIR$/src/js/components/Router.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/js/test_util.js" afterPath="$PROJECT_DIR$/src/js/test_util.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/js/util.js" afterPath="$PROJECT_DIR$/src/js/util.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/qunit_specs/Router.specs.js" afterPath="$PROJECT_DIR$/src/qunit_specs/Router.specs.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/qunit_specs/demo.specs.js" afterPath="$PROJECT_DIR$/src/qunit_specs/demo.specs.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/qunit_specs/m.specs.js" afterPath="$PROJECT_DIR$/src/qunit_specs/m.specs.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/qunit_specs/test_util.specs.js" afterPath="$PROJECT_DIR$/src/qunit_specs/test_util.specs.js" />
     </list>
     <ignored path="cycle-test.iws" />
@@ -28,11 +35,9 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="209">
-              <caret line="55" column="70" selection-start-line="55" selection-start-column="70" selection-end-line="55" selection-end-column="70" />
-              <folding>
-                <element signature="e#2398#2508#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="418">
+              <caret line="66" column="20" selection-start-line="66" selection-start-column="20" selection-end-line="66" selection-end-column="20" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -40,22 +45,25 @@
       <file leaf-file-name="test_util.specs.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/qunit_specs/test_util.specs.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="817">
-              <caret line="106" column="13" selection-start-line="106" selection-start-column="12" selection-end-line="106" selection-end-column="13" />
-              <folding />
+            <state relative-caret-position="570">
+              <caret line="51" column="0" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
+              <folding>
+                <element signature="e#2076#3589#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Router.specs.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Router.specs.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="76">
-              <caret line="51" column="0" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
+            <state relative-caret-position="484">
+              <caret line="69" column="35" selection-start-line="69" selection-start-column="35" selection-end-line="69" selection-end-column="35" />
               <folding>
-                <element signature="e#826#1394#0" expanded="true" />
-                <element signature="e#1467#1990#0" expanded="true" />
-                <element signature="e#2307#2377#0" expanded="true" />
+                <element signature="e#826#1392#0" expanded="true" />
+                <element signature="e#1465#1986#0" expanded="true" />
+                <element signature="e#2858#2957#0" expanded="true" />
+                <element signature="e#5074#5144#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -64,53 +72,68 @@
       <file leaf-file-name="Router.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="171">
-              <caret line="94" column="14" selection-start-line="94" selection-start-column="14" selection-end-line="94" selection-end-column="14" />
+            <state relative-caret-position="-1473">
+              <caret line="123" column="49" selection-start-line="123" selection-start-column="49" selection-end-line="123" selection-end-column="49" />
               <folding>
                 <element signature="e#118#401#0" expanded="true" />
                 <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
                 <element signature="e#1446#1608#0" expanded="true" />
                 <element signature="e#4345#4496#0" expanded="true" />
-                <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
-                <element signature="e#4738#6083#0" expanded="true" />
-                <element signature="e#5058#5363#0" expanded="true" />
-                <element signature="e#5766#5964#0" expanded="true" />
+                <element signature="e#5066#5371#0" expanded="true" />
+                <element signature="e#5774#5972#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="test_util.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="test_util.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/test_util.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="295" column="28" selection-start-line="295" selection-start-column="28" selection-end-line="295" selection-end-column="28" />
+            <state relative-caret-position="209">
+              <caret line="257" column="27" selection-start-line="257" selection-start-column="15" selection-end-line="257" selection-end-column="27" />
               <folding>
                 <element signature="e#26#181#0" expanded="true" />
-                <element signature="e#1667#1815#0" expanded="true" />
+                <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+                <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
                 <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
                 <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
                 <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#2509#2673#0" expanded="true" />
-                <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+                <element signature="e#2216#2380#0" expanded="true" />
                 <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#3004#3414#0" expanded="true" />
-                <element signature="e#3716#4661#0" expanded="true" />
-                <element signature="e#3950#4185#0" expanded="true" />
+                <element signature="e#2711#3121#0" expanded="true" />
+                <element signature="e#3423#4368#0" expanded="true" />
+                <element signature="e#3657#3892#0" expanded="true" />
                 <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#4827#4909#0" expanded="true" />
+                <element signature="e#4534#4616#0" expanded="true" />
                 <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#5020#5489#0" expanded="true" />
+                <element signature="e#4738#5209#0" expanded="true" />
                 <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#5783#6722#0" expanded="true" />
-                <element signature="e#6017#6252#0" expanded="true" />
+                <element signature="e#5464#6403#0" expanded="true" />
+                <element signature="e#5698#5933#0" expanded="true" />
                 <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-                <element signature="e#7267#7462#0" expanded="true" />
-                <element signature="e#7325#7442#0" expanded="true" />
-                <element signature="e#7995#8081#0" expanded="true" />
-                <element signature="e#8429#9529#0" expanded="true" />
-                <element signature="e#8603#9512#0" expanded="true" />
-                <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+                <element signature="e#6948#7136#0" expanded="true" />
+                <element signature="e#7006#7116#0" expanded="true" />
+                <element signature="e#8958#9050#0" expanded="true" />
+                <element signature="e#10472#12004#0" expanded="true" />
+                <element signature="e#10656#11983#0" expanded="true" />
+                <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="m.specs.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/qunit_specs/m.specs.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-561">
+              <caret line="266" column="14" selection-start-line="266" selection-start-column="14" selection-end-line="266" selection-end-column="14" />
+              <folding>
+                <element signature="e#3387#3463#0" expanded="false" />
+                <element signature="e#3614#4403#0" expanded="false" />
+                <element signature="e#3904#4139#0" expanded="false" />
+                <element signature="e#4158#4393#0" expanded="false" />
+                <element signature="e#6449#7383#0" expanded="false" />
+                <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
               </folding>
             </state>
           </provider>
@@ -135,8 +158,8 @@
       <file leaf-file-name="util.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/util.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="256">
-              <caret line="547" column="0" selection-start-line="543" selection-start-column="0" selection-end-line="547" selection-end-column="0" />
+            <state relative-caret-position="484">
+              <caret line="655" column="0" selection-start-line="655" selection-start-column="0" selection-end-line="655" selection-end-column="0" />
               <folding>
                 <element signature="e#26#195#0" expanded="true" />
                 <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
@@ -152,6 +175,7 @@
                 <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+                <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="e#12007#12113#0" expanded="true" />
                 <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
                 <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -169,6 +193,7 @@
                 <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="e#16186#16256#0" expanded="true" />
                 <element signature="e#17813#18091#0" expanded="true" />
+                <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="e#21542#21724#0" expanded="true" />
                 <element signature="e#21830#22450#0" expanded="true" />
@@ -204,11 +229,11 @@
         <option value="$PROJECT_DIR$/src/js/vendor/routematcher.js" />
         <option value="$PROJECT_DIR$/src/qunit_specs/m.specs.js" />
         <option value="$PROJECT_DIR$/src/js/util.js" />
+        <option value="$PROJECT_DIR$/src/qunit_specs/test_util.specs.js" />
+        <option value="$PROJECT_DIR$/src/index.html" />
+        <option value="$PROJECT_DIR$/src/js/test_util.js" />
         <option value="$PROJECT_DIR$/src/js/components/Router.js" />
         <option value="$PROJECT_DIR$/src/qunit_specs/Router.specs.js" />
-        <option value="$PROJECT_DIR$/src/index.html" />
-        <option value="$PROJECT_DIR$/src/qunit_specs/test_util.specs.js" />
-        <option value="$PROJECT_DIR$/src/js/test_util.js" />
       </list>
     </option>
   </component>
@@ -424,12 +449,12 @@
       <updated>1472328586582</updated>
       <workItem from="1472780001378" duration="10137000" />
       <workItem from="1472808647850" duration="45608000" />
-      <workItem from="1473058862407" duration="10908000" />
+      <workItem from="1473058862407" duration="19937000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="66653000" />
+    <option name="totallyTimeSpent" value="75682000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="119" y="0" width="1161" height="800" extended-state="1" />
@@ -439,6 +464,7 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.18374558" sideWeight="0.67223066" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32776934" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32776934" sideWeight="0.5004445" order="9" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3259587" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="npm" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32776934" sideWeight="0.49955556" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329927" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -454,7 +480,6 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3264402" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -482,30 +507,30 @@
           <caret line="86" column="76" selection-start-line="86" selection-start-column="76" selection-end-line="86" selection-end-column="76" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -543,6 +568,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -560,6 +586,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -571,9 +598,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1197">
           <caret line="63" column="2" selection-start-line="63" selection-start-column="2" selection-end-line="63" selection-end-column="2" />
-          <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -581,13 +606,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="684">
           <caret line="58" column="0" selection-start-line="58" selection-start-column="0" selection-end-line="58" selection-end-column="0" />
-          <folding>
-            <element signature="e#532#1166#0" expanded="false" />
-            <element signature="e#580#1162#0" expanded="false" />
-            <element signature="e#714#891#0" expanded="false" />
-            <element signature="e#942#1147#0" expanded="false" />
-            <element signature="e#1758#1828#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -596,27 +615,12 @@
         <state relative-caret-position="1007">
           <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
           <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
@@ -630,10 +634,8 @@
             <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
             <element signature="e#1446#1608#0" expanded="true" />
             <element signature="e#4345#4496#0" expanded="true" />
-            <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
-            <element signature="e#4738#6083#0" expanded="true" />
-            <element signature="e#5058#5363#0" expanded="true" />
-            <element signature="e#5766#5964#0" expanded="true" />
+            <element signature="e#5066#5371#0" expanded="true" />
+            <element signature="e#5774#5972#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -644,30 +646,30 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -705,6 +707,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -722,6 +725,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -733,9 +737,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1197">
           <caret line="63" column="2" selection-start-line="63" selection-start-column="2" selection-end-line="63" selection-end-column="2" />
-          <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -743,13 +745,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="684">
           <caret line="58" column="0" selection-start-line="58" selection-start-column="0" selection-end-line="58" selection-end-column="0" />
-          <folding>
-            <element signature="e#532#1166#0" expanded="false" />
-            <element signature="e#580#1162#0" expanded="false" />
-            <element signature="e#714#891#0" expanded="false" />
-            <element signature="e#942#1147#0" expanded="false" />
-            <element signature="e#1758#1828#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -758,27 +754,12 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
@@ -789,30 +770,30 @@
           <caret line="22" column="4" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="4" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -850,6 +831,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -867,6 +849,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -878,9 +861,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="63" column="0" selection-start-line="63" selection-start-column="0" selection-end-line="63" selection-end-column="0" />
-          <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -889,27 +870,12 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
@@ -920,30 +886,30 @@
           <caret line="168" column="0" selection-start-line="168" selection-start-column="0" selection-end-line="168" selection-end-column="0" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -981,6 +947,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -998,6 +965,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -1009,9 +977,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="40" column="26" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="26" />
-          <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1020,27 +986,12 @@
         <state relative-caret-position="0">
           <caret line="31" column="0" selection-start-line="31" selection-start-column="0" selection-end-line="31" selection-end-column="0" />
           <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1051,30 +1002,30 @@
           <caret line="47" column="0" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1112,6 +1063,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -1129,6 +1081,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -1140,9 +1093,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="6" column="33" selection-start-line="6" selection-start-column="33" selection-end-line="6" selection-end-column="33" />
-          <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1151,27 +1102,12 @@
         <state relative-caret-position="0">
           <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
           <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1182,30 +1118,30 @@
           <caret line="47" column="0" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
           <folding>
             <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
             <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
             <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
             <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
             <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
             <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1250,6 +1186,7 @@
             <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#12007#12113#0" expanded="true" />
             <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
             <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
@@ -1267,6 +1204,7 @@
             <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#16186#16256#0" expanded="true" />
             <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#21542#21724#0" expanded="true" />
             <element signature="e#21830#22450#0" expanded="true" />
@@ -1341,13 +1279,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="617">
           <caret line="58" column="0" selection-start-line="58" selection-start-column="0" selection-end-line="58" selection-end-column="0" />
-          <folding>
-            <element signature="e#532#1166#0" expanded="false" />
-            <element signature="e#580#1162#0" expanded="false" />
-            <element signature="e#714#891#0" expanded="false" />
-            <element signature="e#942#1147#0" expanded="false" />
-            <element signature="e#1758#1828#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1358,49 +1290,55 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/qunit_specs/m.specs.js">
+    <entry file="file://$PROJECT_DIR$/src/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1397">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#26#19857#0" expanded="false" />
-            <element signature="e#3386#3462#0" expanded="false" />
-            <element signature="e#3613#4402#0" expanded="false" />
-            <element signature="e#3903#4138#0" expanded="false" />
-            <element signature="e#4157#4392#0" expanded="false" />
-            <element signature="e#4465#4541#0" expanded="false" />
-            <element signature="e#6445#7379#0" expanded="false" />
-            <element signature="e#7506#7575#0" expanded="false" />
-            <element signature="e#8547#8617#0" expanded="false" />
-            <element signature="e#9973#10084#0" expanded="false" />
-            <element signature="e#10024#10078#0" expanded="false" />
-            <element signature="e#10611#10893#0" expanded="false" />
-            <element signature="e#10968#11252#0" expanded="false" />
-            <element signature="e#11332#11409#0" expanded="false" />
-            <element signature="e#12636#12712#0" expanded="false" />
-            <element signature="e#14754#19853#0" expanded="false" />
-            <element signature="e#14897#15179#0" expanded="false" />
-            <element signature="e#15254#15538#0" expanded="false" />
-            <element signature="e#15618#15695#0" expanded="false" />
-            <element signature="e#16644#16720#0" expanded="false" />
-            <marker date="1472888455631" expanded="true" signature="3628:3877" ph="..." />
-          </folding>
+        <state relative-caret-position="418">
+          <caret line="66" column="20" selection-start-line="66" selection-start-column="20" selection-end-line="66" selection-end-column="20" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
+    <entry file="file://$PROJECT_DIR$/src/js/util.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="94" column="14" selection-start-line="94" selection-start-column="14" selection-end-line="94" selection-end-column="14" />
+        <state relative-caret-position="484">
+          <caret line="655" column="0" selection-start-line="655" selection-start-column="0" selection-end-line="655" selection-end-column="0" />
           <folding>
-            <element signature="e#118#401#0" expanded="true" />
-            <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
-            <element signature="e#1446#1608#0" expanded="true" />
-            <element signature="e#4345#4496#0" expanded="true" />
-            <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
-            <element signature="e#4738#6083#0" expanded="true" />
-            <element signature="e#5058#5363#0" expanded="true" />
-            <element signature="e#5766#5964#0" expanded="true" />
+            <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4172#4590#0" expanded="true" />
+            <element signature="e#4656#8176#0" expanded="true" />
+            <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#8948#8986#0" expanded="true" />
+            <element signature="e#9421#9587#0" expanded="true" />
+            <element signature="n#!!block;n#assertContract#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!doc;n#isNullableObject#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isNullableObject#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isNullableComponentDef#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#12007#12113#0" expanded="true" />
+            <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
+            <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isObservable#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isSources#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isOptSinks#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#isArrayOptSinks#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#assertSourcesContracts#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#assertSinksContracts#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#shareAllSources#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#trace#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#removeNullsFromArray#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#14664#15252#0" expanded="true" />
+            <element signature="n#!!block;n#projectSinksOn#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#16186#16256#0" expanded="true" />
+            <element signature="e#17813#18091#0" expanded="true" />
+            <element signature="n#!!block;n#parseDiagram#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#21542#21724#0" expanded="true" />
+            <element signature="e#21830#22450#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1419,109 +1357,89 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/js/util.js">
+    <entry file="file://$PROJECT_DIR$/src/qunit_specs/m.specs.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="256">
-          <caret line="547" column="0" selection-start-line="543" selection-start-column="0" selection-end-line="547" selection-end-column="0" />
+        <state relative-caret-position="-561">
+          <caret line="266" column="14" selection-start-line="266" selection-start-column="14" selection-end-line="266" selection-end-column="14" />
           <folding>
-            <element signature="e#26#195#0" expanded="true" />
-            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="e#4172#4590#0" expanded="true" />
-            <element signature="e#4656#8176#0" expanded="true" />
-            <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="e#8948#8986#0" expanded="true" />
-            <element signature="e#9421#9587#0" expanded="true" />
-            <element signature="n#!!block;n#assertContract#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!doc;n#isNullableObject#0;n#!!block;n#require_util#0" expanded="false" />
-            <element signature="n#!!block;n#isNullableObject#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isNullableComponentDef#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isUndefined#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isFunction#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!doc;n#isArrayOf#0;n#!!block;n#require_util#0" expanded="false" />
-            <element signature="e#12007#12113#0" expanded="true" />
-            <element signature="n#!!doc;n#isComponent#0;n#!!block;n#require_util#0" expanded="false" />
-            <element signature="n#!!block;n#isComponent#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isObservable#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isSources#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isOptSinks#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#isArrayOptSinks#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#assertSourcesContracts#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#assertSinksContracts#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#shareAllSources#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#trace#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#removeNullsFromArray#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="e#14664#15252#0" expanded="true" />
-            <element signature="n#!!block;n#projectSinksOn#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="n#!!block;n#getSinkNamesFromSinksArray#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="e#16186#16256#0" expanded="true" />
-            <element signature="e#17813#18091#0" expanded="true" />
-            <element signature="n#!!block;n#makeSourceFromDiagram#0;n#!!block;n#require_util#0" expanded="true" />
-            <element signature="e#21542#21724#0" expanded="true" />
-            <element signature="e#21830#22450#0" expanded="true" />
+            <element signature="e#3387#3463#0" expanded="false" />
+            <element signature="e#3614#4403#0" expanded="false" />
+            <element signature="e#3904#4139#0" expanded="false" />
+            <element signature="e#4158#4393#0" expanded="false" />
+            <element signature="e#6449#7383#0" expanded="false" />
+            <marker date="1473080208470" expanded="true" signature="3629:3878" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="51" column="0" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
-          <folding>
-            <element signature="e#826#1394#0" expanded="true" />
-            <element signature="e#1467#1990#0" expanded="true" />
-            <element signature="e#2307#2377#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/index.html">
+    <entry file="file://$PROJECT_DIR$/src/js/test_util.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="209">
-          <caret line="55" column="70" selection-start-line="55" selection-start-column="70" selection-end-line="55" selection-end-column="70" />
+          <caret line="257" column="27" selection-start-line="257" selection-start-column="15" selection-end-line="257" selection-end-column="27" />
           <folding>
-            <element signature="e#2398#2508#0" expanded="true" />
+            <element signature="e#26#181#0" expanded="true" />
+            <element signature="n#!!block;n#isSourceInput#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedStruct#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2216#2380#0" expanded="true" />
+            <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#2711#3121#0" expanded="true" />
+            <element signature="e#3423#4368#0" expanded="true" />
+            <element signature="e#3657#3892#0" expanded="true" />
+            <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#4534#4616#0" expanded="true" />
+            <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#4738#5209#0" expanded="true" />
+            <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#5464#6403#0" expanded="true" />
+            <element signature="e#5698#5933#0" expanded="true" />
+            <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#6948#7136#0" expanded="true" />
+            <element signature="e#7006#7116#0" expanded="true" />
+            <element signature="e#8958#9050#0" expanded="true" />
+            <element signature="e#10472#12004#0" expanded="true" />
+            <element signature="e#10656#11983#0" expanded="true" />
+            <element signature="n#!!block;n#_runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1473">
+          <caret line="123" column="49" selection-start-line="123" selection-start-column="49" selection-end-line="123" selection-end-column="49" />
+          <folding>
+            <element signature="e#118#401#0" expanded="true" />
+            <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="e#1446#1608#0" expanded="true" />
+            <element signature="e#4345#4496#0" expanded="true" />
+            <element signature="e#5066#5371#0" expanded="true" />
+            <element signature="e#5774#5972#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/qunit_specs/test_util.specs.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="817">
-          <caret line="106" column="13" selection-start-line="106" selection-start-column="12" selection-end-line="106" selection-end-column="13" />
-          <folding />
+        <state relative-caret-position="570">
+          <caret line="51" column="0" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
+          <folding>
+            <element signature="e#2076#3589#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/js/test_util.js">
+    <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="295" column="28" selection-start-line="295" selection-start-column="28" selection-end-line="295" selection-end-column="28" />
+        <state relative-caret-position="484">
+          <caret line="69" column="35" selection-start-line="69" selection-start-column="35" selection-end-line="69" selection-end-column="35" />
           <folding>
-            <element signature="e#26#181#0" expanded="true" />
-            <element signature="e#1667#1815#0" expanded="true" />
-            <element signature="n#!!block;n#isExpectedRecord#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="n#!!block;n#hasTestCaseForEachSink#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="n#!!block;n#makeTestSources#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#2509#2673#0" expanded="true" />
-            <element signature="n#!!block;n#endOf#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="n#!!block;n#sendTestInputsTo#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#3004#3414#0" expanded="true" />
-            <element signature="e#3716#4661#0" expanded="true" />
-            <element signature="e#3950#4185#0" expanded="true" />
-            <element signature="n#!!block;n#analyzeTestResultsCurried#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#4827#4909#0" expanded="true" />
-            <element signature="n#!!block;n#analyzeTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5020#5489#0" expanded="true" />
-            <element signature="n#!!block;n#getTestResults#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#5783#6722#0" expanded="true" />
-            <element signature="e#6017#6252#0" expanded="true" />
-            <element signature="n#!!block;n#projectAtIndex#0;n#!!block;n#require_test_utils#0" expanded="true" />
-            <element signature="e#7267#7462#0" expanded="true" />
-            <element signature="e#7325#7442#0" expanded="true" />
-            <element signature="e#7995#8081#0" expanded="true" />
-            <element signature="e#8429#9529#0" expanded="true" />
-            <element signature="e#8603#9512#0" expanded="true" />
-            <element signature="n#!!block;n#runTestScenario#0;n#!!block;n#require_test_utils#0" expanded="true" />
+            <element signature="e#826#1392#0" expanded="true" />
+            <element signature="e#1465#1986#0" expanded="true" />
+            <element signature="e#2858#2957#0" expanded="true" />
+            <element signature="e#5074#5144#0" expanded="true" />
           </folding>
         </state>
       </provider>
