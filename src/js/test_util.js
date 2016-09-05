@@ -36,15 +36,20 @@ function require_test_utils(Rx, $, R, U) {
   const makeSourceFromDiagram = U.makeSourceFromDiagram
   const identity = R.identity
   const mapObjIndexed = R.mapObjIndexed
+  const mapIndexed = R.addIndex(R.map)
   const valuesR = R.values
   const allR = R.all
   const reduceR = R.reduce
   const keysR = R.keys
+  const mapR = R.map
+  const always = R.always
   const rxlog = function (label) {return console.warn.bind(console, label)}
   const isOptSinks = U.isOptSinks
 
   const assertSignature = U.assertSignature
   const assertContract = U.assertContract
+
+  const tickDurationDefault = 5
 
   //////
   // Contract and signature checking helpers
@@ -168,8 +173,167 @@ function require_test_utils(Rx, $, R, U) {
     }
   }
 
+  function getTestResults(testInputs$, testCase, settings) {
+    const defaultWaitForFinishDelay = 50
+    const waitForFinishDelay = settings.waitForFinishDelay
+      || defaultWaitForFinishDelay
+    const expected = testCase.expected
+
+    return function getTestResults(sink$, sinkName) {
+      if (U.isUndefined(sink$)) {
+        console.warn('getTestResults: received an undefined sink ' + sinkName)
+        return $.of([])
+      }
+
+      return sink$
+        .scan(function buildResults(accumulatedResults, sinkValue) {
+          const transformFn = expected[sinkName].transformFn || identity
+          const transformedResult = transformFn(sinkValue)
+          accumulatedResults.push(transformedResult);
+
+          return accumulatedResults;
+        }, [])
+        //        .do(rxlog('Transformed results for sink ' + sinkName + ' :'))
+        // Give it some time to process the inputs,
+        // after the inputs have finished being emitted
+        // That's arbitrary, keep it in mind that the testing helper
+        // is not suitable for functions with large processing delay
+        // between input and the corresponding output
+        .sample(testInputs$.last().delay(waitForFinishDelay))
+        .take(1)
+    }
+  }
+
+  /**
+   * @typedef {{diagram: string, values:*}} Input
+   * only one key,value pair though
+   */
+  /**
+   * @typedef {Object.<string, Input>} SourceInput
+   * only one key,value pair though
+   */
+
+  /**
+   *
+   * @param {Number} tickNum
+   * @param {Array<SourceInput>} inputs
+   * @returns {Array<SourceInput>} a similar array of input but with a
+   * diagram with only one character taken from the input diagram at
+   * position tickNum
+   */
+  function projectAtIndex(tickNum, inputs) {
+    return mapR(function mapInputs(sourceInput) {
+      return mapR(function projectDiagramAtIndex(input) {
+        return {
+          diagram: input.diagram.trim()[tickNum],
+          values: input.values
+        }
+      }, sourceInput)
+    }, inputs)
+  }
+
   //////
   // Main functions
+
+  /**
+   *
+   * @param {Array<SourceInput>} inputs [{sourceName: {{diagram: string,
+    * values:*}}}]
+   * @param testCase - same but without inputs
+   * @param testFn - same
+   * @param opt - TODO
+   */
+  function runTestScenario2(inputs, testCase, testFn, opt) {
+    const tickDuration = (opt && opt.tickDuration) ?
+      opt.tickDuration :
+      tickDurationDefault
+
+    // @type Object.<string, observable>
+    let sourcesSubjects = reduceR(function makeSubjects(accSubjects, input) {
+      accSubjects[keysR(input)[0]] = new Rx.Subject()
+      return accSubjects
+    }, {}, inputs)
+
+    const maxLen = Math.max.apply(null,
+      mapR(sourceInput => valuesR(sourceInput)[0].diagram.length, inputs)
+    )
+
+    // @type Array<Number>
+    const indexRange = mapIndexed((input, index) => index, new Array(maxLen))
+
+    // @type Observable<Nil>
+    const testInputs$ = reduceR(function makeInputs$(accEmitInputs$, tickNo) {
+      return accEmitInputs$
+        .delay(tickDuration)
+        .concat(
+          $.from(projectAtIndex(tickNo, inputs))
+            .do(function emitInputs(sourceInput) {
+              // input :: {sourceName : {{diagram : char, values: Array<*>}}
+              const sourceName = keysR(sourceInput)[0]
+              const input = sourceInput[sourceName]
+              const c = input.diagram
+              const values = input.values
+              const sourceSubject = sourcesSubjects[sourceName]
+              const errorVal = values['#'] || '#'
+
+              switch (c) {
+                case '-':
+                  console.log('- doing nothing')
+                  break;
+                case '#':
+                  sourceSubject.onError({data: errorVal})
+                  break;
+                case '|':
+                  sourceSubject.onCompleted()
+                  break;
+                default:
+                  const val = values.hasOwnProperty(c) ? values[c] : c;
+                  sourceSubject.onNext(val)
+                  break;
+              }
+            })
+        )
+    }, $.empty(), indexRange)
+      .share()
+
+    // execute the function to be tested (for example a cycle component)
+    let testSinks = testFn(sourcesSubjects)
+    if (!isOptSinks(testSinks)) {
+      throw 'encountered a sink which is not an observable!'
+    }
+
+    /** @type {Object.<string, Observable<Array<Output>>>} */
+    const sinksResults = mapObjIndexed(
+      getTestResults(testInputs$, testCase, opt),
+      testSinks
+    )
+
+    assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
+      'runTestScenario : in testCase, could not find test inputs for all sinks!'
+    )
+
+    // Side-effect : execute `analyzeTestResults` function which
+    // makes use of `assert` and can lead to program interruption
+    /** @type {Object.<string, Observable<Array<Output>>>} */
+    const resultAnalysis = mapObjIndexed(
+      analyzeTestResults(testCase),
+      sinksResults
+    )
+
+    // This takes care of actually starting the producers
+    // which generate the execution of the test assertions
+    $.merge(valuesR(resultAnalysis))
+      .subscribe(
+        rxlog('Test completed for sink:'),
+        rxlog('An error occurred while executing test!'),
+        rxlog('Tests completed!')
+      )
+    testInputs$.subscribe(
+      rxlog('emitting inputs'),
+      rxlog('An error occurred while emitting test inputs'),
+      rxlog('test inputs emitted')
+    )
+  }
 
   /**
    * Tests a function against sources' test input values and the expected
@@ -255,6 +419,7 @@ function require_test_utils(Rx, $, R, U) {
 
   return {
     runTestScenario: runTestScenario,
+    runTestScenario2: runTestScenario2,
     makeTestSources: makeTestSources
   }
 }
