@@ -29,6 +29,11 @@ function require_util(Rx, $, R, Sdom) {
   const complement = R.complement
   const uniq = R.uniq
 
+  // Configuration
+  // TODO : put all constant like this is a prop file with a json object
+  // organized by category, here the category is sources
+  const routeSourceName = 'route$'
+
   /**
    * @typedef {Object.<string, Observable>} Sources
    */
@@ -93,6 +98,8 @@ function require_util(Rx, $, R, Sdom) {
    */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
+    console.group('m - ' + _settings.trace)
+    console.log('componentDef, _settings, children', componentDef, _settings, children)
     // check signature
     const mSignature = [
       {componentDef: isNullableComponentDef},
@@ -112,22 +119,36 @@ function require_util(Rx, $, R, Sdom) {
     // mandatory settings
 
     if (componentDef.makeAllSinks) {
+      console.groupEnd()
+
       return function m(sources, innerSettings) {
+        console.group('m router component function - ' + _settings.trace || "" + ':')
+        console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
+
         assertSourcesContracts(sources, sourcesContract)
 
-        const mergedSettings = mergeR(_settings, innerSettings)
+        const mergedSettings = mergeR(innerSettings, _settings) // TODO !!
+        // inverted order!!
 
         let sinks = componentDef.makeAllSinks(sources, mergedSettings, children)
         assertSinksContracts(sources, sinksContract)
 
         // TODO : factor out the trace too so I don't duplicate it
         const tracedSinks = trace(sinks, mergedSettings)
+
+        console.groupEnd()
+
         return tracedSinks
       }
     }
     else {
+      console.groupEnd()
       return function m(sources, innerSettings) {
-        const mergedSettings = mergeR(_settings, innerSettings)
+        console.group('m component function:')
+        console.log('sources, innerSettings', sources, innerSettings)
+
+//        const mergedSettings = mergeR(_settings, innerSettings)
+        const mergedSettings = mergeR(innerSettings, _settings) // TODO !!
 
         assertSourcesContracts(sources, sourcesContract)
 
@@ -146,10 +167,14 @@ function require_util(Rx, $, R, Sdom) {
         )
 
         const ownSinks = makeOwnSinks(extendedSources, localSettings)
+        if (!ownSinks) console.warn('ownSinks : null!!!')
+
+        console.group('m - computing children sinks')
         const childrenSinks = mapR(
           childComponent => childComponent(extendedSources, localSettings),
           children
         )
+        console.groupEnd('m - computing children sinks')
         assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
         assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
 
@@ -185,6 +210,7 @@ function require_util(Rx, $, R, Sdom) {
         //        before they are subscribed to. Can't think of a use case where
         //        that behavior is desirable.
 
+        console.groupEnd()
         return tracedSinks
       }
     }
@@ -322,6 +348,11 @@ function require_util(Rx, $, R, Sdom) {
     }
   }
 
+  function isVNode(obj) {
+    return ["children", "data", "elm", "key", "sel", "text"]
+      .every(prop => prop in obj)
+  }
+
   /**
    * Returns true iff the parameter `obj` represents a component.
    * @param obj
@@ -404,6 +435,11 @@ function require_util(Rx, $, R, Sdom) {
 
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
+      // TODO : add a test that isArrayVNode
+      // to defend against people using DOM source but not passing VNode
+      assertContract(isArrayOf(isVNode), [arrayVNode], 'DOM sources must' +
+        ' stream VNode objects! Got ' + arrayVNode)
+
       if (parentDOMSink) {
         // Case : the parent sinks have a DOM sink
         let parentVNode = cloneR(arrayVNode.shift())
@@ -483,6 +519,7 @@ function require_util(Rx, $, R, Sdom) {
     if (allDOMSinks.length === 0) {return null}
 
     return $.combineLatest(allDOMSinks)
+      .tap(console.log.bind(console, 'mergeDOMSinksDefault: allDOMSinks'))
       .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
@@ -501,6 +538,8 @@ function require_util(Rx, $, R, Sdom) {
 
       if (sinkName === 'DOM') {
         value = mergeDOMSinksDefault(parentSinks, childrenSinks)
+      } else if (sinkName === routeSourceName) {
+        value = mergeRouteSinksDefault(parentSinks, childrenSinks)
       } else {
         value = mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName)
       }
@@ -508,6 +547,17 @@ function require_util(Rx, $, R, Sdom) {
       accSinks[sinkName] = value
       return accSinks
     }
+  }
+
+  function mergeRouteSinksDefault(parentSinks, childrenSinks) {
+    // TODO : STUPID!!! route$ is not a sink...
+    // In the case of routing, each child has its own route source
+    // This means children route data are local to the children
+    // and should not be propagated up to the parent
+    console.group('mergeRouteSinksDefault')
+    console.log('parentSinks, childrenSinks', parentSinks, childrenSinks)
+    console.groupEnd()
+    return parentSinks[routeSourceName]
   }
 
   /**
@@ -639,8 +689,20 @@ function require_util(Rx, $, R, Sdom) {
       .pluck('value')
   }
 
+  function makeDivVNode(x) {
+    return {
+      "children": undefined,
+      "data": {},
+      "elm": undefined,
+      "key": undefined,
+      "sel": "div",
+      "text": x
+    }
+  }
+
   return {
     m: m,
+    makeDivVNode: makeDivVNode,
     makeSourceFromDiagram: makeSourceFromDiagram,
     assertSignature: assertSignature,
     assertContract: assertContract,
@@ -649,6 +711,7 @@ function require_util(Rx, $, R, Sdom) {
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,
+    isVNode: isVNode,
     isObject: isObject,
     isString: isString,
     isArray: isArray,

@@ -54,6 +54,12 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     let rm2 = routeMatcher(routeToMatch + '/*routeRemainder')
 
     return function match(incomingRoute) {
+      if (isNil(incomingRoute)) {
+        return {
+          match : null
+        }
+      }
+
       const matched = rm1.parse(incomingRoute)
       const remainder = rm2.parse(incomingRoute)
 
@@ -90,10 +96,13 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * response to the matching route
    *
    * @param {Sources} sources
-   * @param {{route: string, sinkNames: Array<string>}} settings
+   * @param {{route: string, sinkNames: Array<string>, trace: string}} settings
    * @param {Array<Component>} childrenComponents
    */
   function makeAllSinks(sources, settings, childrenComponents) {
+    console.group('makeAllSinks')
+    console.log('sources, settings, childrenComponents', sources, settings, childrenComponents);
+
     const signature = [{settings: isRouteSettings},]
 
     assertSignature('makeAllSinks', [settings], signature)
@@ -107,12 +116,13 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     // This behaviour results in having to handle null cases for sinks (some
     // sinks might be present only on some children components).
     const sinkNames = settings.sinkNames
+    const trace = 'router:' + (settings.trace || "")
 
     let route$ = sources[routeSourceName]
       .tap(console.log.bind(console, 'route$'))
 
     let matchedRoute$ = route$.map(match(settings.route))
-      .tap(console.warn.bind(console, 'matchedRoute$'))
+      .tap(console.warn.bind(console, trace + '|matchedRoute$'))
       // NOTE : replaying here is mandatory
       // That's because the children are passed `matchedRoute` and
       // connect to it AFTER the `route$` has emitted its value...
@@ -150,18 +160,29 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     changedRouteEvents$
       .map(function (params) {
         let cachedSinks
+
         if (params != null) {
           console.info('computing children components sinks', params)
           const componentFromChildren = m({
-              makeLocalSources: function (sources) {
+              makeLocalSources: function makeLocalSources(sources, __settings) {
+                console.group('makeLocalSources')
+                console.log('sources, __settings', sources, __settings);
+                console.groupEnd('makeLocalSources')
+
                 return {
                   route$: matchedRoute$
                     .map(pathR(['match', 'routeRemainder']))
-                    .tap(console.warn.bind(console, 'routeRemainder: '))
+                    .tap(console.warn.bind(console, settings.trace + ' :' +
+                      ' changedRouteEvents$' +
+                      ' : routeRemainder: '))
                     .share(),
+                  ['router:' + (settings.trace || "")]: $.of("")
                 }
               },
-            }, {routeParams: omit(['routeRemainder'], params)},
+            }, {
+              routeParams: omit(['routeRemainder'], params),
+              trace: 'inner - ' + trace
+            },
             childrenComponents)
           cachedSinks = componentFromChildren(sources, settings)
         }
@@ -200,6 +221,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       }
     }
 
+    console.groupEnd('makeAllSinks')
     return mergeAllR(mapR(makeRoutedSink, sinkNames))
   }
 

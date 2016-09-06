@@ -19,7 +19,7 @@ define(function (require) {
 
   QUnit.module("Testing Router component", {})
 
-  QUnit.test("main cases - non-nested routing", function exec_test(assert) {
+  QUnit.skip("main cases - non-nested routing", function exec_test(assert) {
     let done = assert.async(4)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -55,7 +55,6 @@ define(function (require) {
       [childComponent1, childComponent2])
 
     const inputs = [
-//      {_fake: {diagram: '----------------'}},
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
       {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d-e-f-'}},
       {
@@ -113,8 +112,6 @@ define(function (require) {
       ]),
     ]
 
-    // TODO : adapter test a la nouvelle routine de test
-
     /** @type TestResults */
     const expected = {
       DOM: {
@@ -157,6 +154,154 @@ define(function (require) {
           "Component2 - user action - select"
         ],
         successMessage: 'sink b produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+    }
+
+    function analyzeTestResults(actual, expected, message) {
+      assert.deepEqual(actual, expected, message)
+      done()
+    }
+
+    const testFn = mComponent
+
+    runTestScenario(inputs, expected, testFn, {
+      tickDuration: 10,
+      waitForFinishDelay: 100
+    })
+
+  })
+
+  // m(Router, {route: '/:user/'}, [
+  //   m(Component1, [
+  //     m(Router, {route: '/:id'}, [
+  //       Component2
+  //     ])
+  //   ])
+  // ])
+
+  QUnit.test("main cases - nested routing", function exec_test(assert) {
+    let done = assert.async(4)
+
+    const childComponent = {
+      makeOwnSinks: function (sources, settings) {
+        console.group("executing childComponent own")
+        console.log('sources, settings', sources, settings)
+        console.groupEnd("executing childComponent own")
+
+        return {
+          DOM: sources.DOM1.take(4)
+            .tap(console.warn.bind(console, 'DOM : child component : '))
+            .map(x => h('span', {},
+              'Child component : id=' + settings.routeParams.user + ' - ' + x))
+            .concat($.never()),
+          routeLog: sources.route$
+            .tap(console.warn.bind(console, 'routeLog : child component -' +
+              ' route$'))
+            .map(x => 'Child component 1 - routeLog - ' + settings.routeParams.user),
+          userAction1$: sources.userAction$.map(x => 'child component - user' +
+          ' action - ' + x)
+        }
+      }
+    }
+
+    const greatChildComponent = function greatChildComponent(sources, settings) {
+      console.group("executing greatChildComponent own")
+      console.log('sources, settings', sources, settings)
+      console.groupEnd("executing childComponent own")
+
+      return {
+        DOM: sources.DOM2.take(4)
+          .tap(console.warn.bind(console, 'DOM : great child component : '))
+          .map(x => h('span', {},
+            'Great child component : id=' + settings.routeParams.id + ' - ' + x))
+          .concat($.never()),
+        routeLog: sources.route$
+          .tap(console.warn.bind(console, 'routeLog : great child component -' +
+            ' route$'))
+          .map(x => 'great child component 1 - routeLog - ' + settings.routeParams.user + settings.routeParams.id),
+        userAction2$: sources.userAction$.map(x => 'great child component -' +
+        ' user action - ' + x),
+        notMerged: sources.DOM1.map(x => 'ERROR')
+          .tap(console.log.bind(console, 'notMerged:'))
+      }
+    }
+
+    console.group('creating mComponent')
+    const mComponent = m(Router,
+      {route: ':user', sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$'], trace: 'top'},
+      [
+        m(childComponent, {trace: 'middle'}, [
+          m(Router, {route: ':id', trace: 'bottom'}, [greatChildComponent])
+        ])
+      ])
+    console.groupEnd('creating mComponent')
+
+    // sources : route$, DOM1, DOM2, userAction$
+    // greatChildComponent : routeLog <- route, settings; DOM <- DOM2,
+    // userAction2$ <- userAction$,
+    // notMerged (dont put in sinkNames, to check that it is not merged)
+    // childComponent : routeLog <- route, settings; DOM <- DOM1,
+    // userAction1$ <- userAction$
+
+    const inputs = [
+      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
+      {
+        userAction$: {
+          diagram: 'a---b-ac--ab---c',
+          values: {a: 'click', b: 'select', c: 'hover',}
+        }
+      },
+      {
+        route$: {
+          //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
+          //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
+          diagram: '-a---b--cdef--g-h-', values: {
+            a: 'bruno/1',
+            b: 'ted',
+            c: 'bruno/2',
+            d: 'bruno/2/remainder',
+            e: 'bruno/2/remainder',
+            f: 'bruno/3/bigger/remainder',
+            g: 'paul',
+            h: '',
+          }
+        }
+      }
+    ]
+
+    function makeVNode(componentNum, id, x) {
+      return h('span', {},
+        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+    }
+
+    const vNodes = []
+
+    /** @type TestResults */
+    const expected = {
+      DOM: {
+        outputs: vNodes,
+        successMessage: 'sink DOM produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      routeLog: {
+        outputs: [],
+        successMessage: 'sink routeLog produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      userAction1$: {
+        outputs: [],
+        successMessage: 'sink userAction1$ produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      userAction2$: {
+        outputs: [],
+        successMessage: 'sink userAction2$ produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },

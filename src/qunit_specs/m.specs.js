@@ -9,12 +9,14 @@ define(function (require) {
   const div = Sdom.div
   const span = Sdom.span
   const tutils = require('test_util')
-  const runTestScenario = tutils._runTestScenario
+  const runTestScenario = tutils.runTestScenario
   const m = U.m
   const mapR = R.map
   const reduceR = R.reduce
+  const always = R.always
   const makeTestSources = tutils.makeTestSources
   const projectSinksOn = U.projectSinksOn
+  const makeDivVNode = U.makeDivVNode
 
   // Fixtures
   const PROVIDERS = {
@@ -30,7 +32,7 @@ define(function (require) {
   // As much as possible, the helper is written so it fails early with a
   // reasonably descriptive error message when it detects invalid arguments
 
-  QUnit.skip("edge cases - no arguments", function exec_test(assert) {
+  QUnit.test("edge cases - no arguments", function exec_test(assert) {
     //    let done = assert.async(3)
 
     assert.throws(function () {m()}, /fails/,
@@ -93,6 +95,14 @@ define(function (require) {
 
       const testSources = makeTestSources(['DOM', 'a', 'b', 'c', 'd', 'e'])
 
+      const inputs = [
+        {a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}}},
+        {b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}}},
+        {c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}}},
+        {d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}}},
+        {e: {diagram: 'a|', values: {a: 'e-0'}}}
+      ]
+
       const vNodes = [
         // 1
         div([
@@ -128,50 +138,41 @@ define(function (require) {
       }
 
       /** @type TestResults */
-      const testCase = {
-        inputs: {
-          a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
-          b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}},
-          c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}},
-          d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}},
-          e: {diagram: 'a|', values: {a: 'e-0'}},
+      const testResults = {
+        DOM: {
+          outputs: vNodes,
+          successMessage: 'sink DOM produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
         },
-        expected: {
-          DOM: {
-            outputs: vNodes,
-            successMessage: 'sink DOM produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          a: {
-            outputs: [
-              "child1-a-b-0",
-              "child2-a-d-0",
-              "child1-a-b-1",
-              "child1-a-b-2",
-              "child2-a-d-2"
-            ],
-            successMessage: 'sink a produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-          },
-          c: {
-            outputs: ["child1-c-c-0", "child1-c-c-1", "child1-c-c-2"],
-            successMessage: 'sink c produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          d: {
-            outputs: ["child2-e-e-0"],
-            successMessage: 'sink d produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-        }
+        a: {
+          outputs: [
+            "child1-a-b-0",
+            "child2-a-d-0",
+            "child1-a-b-1",
+            "child1-a-b-2",
+            "child2-a-d-2"
+          ],
+          successMessage: 'sink a produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+        },
+        c: {
+          outputs: ["child1-c-c-0", "child1-c-c-1", "child1-c-c-2"],
+          successMessage: 'sink c produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        d: {
+          outputs: ["child2-e-e-0"],
+          successMessage: 'sink d produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
       }
 
       const testFn = mComponent
 
-      runTestScenario(testSources, testCase, testFn, {
+      runTestScenario(inputs, testResults, testFn, {
         timeUnit: 50,
         waitForFinishDelay: 100
       })
@@ -254,10 +255,10 @@ define(function (require) {
       sinksContract: function checkMSinksContracts() {return true}
     }, null, [])
 
-    const testSources = {
-      DOM: new Rx.ReplaySubject(1),
-      auth$: new Rx.ReplaySubject(1),
-    }
+    const inputs = [
+      {auth$: {diagram: '-a|', values: {a: PROVIDERS.facebook}}},
+    ]
+
 
     function analyzeTestResults(actual, expected, message) {
       assert.deepEqual(actual, expected, message)
@@ -265,44 +266,39 @@ define(function (require) {
     }
 
     /** @type TestResults */
-    const testCase = {
-      inputs: {
-        auth$: {diagram: '-a|', values: {a: PROVIDERS.facebook}},
+    const testResults = {
+      DOM: {
+        outputs: [vNode],
+        successMessage: 'sink DOM produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
       },
-      expected: {
-        DOM: {
-          outputs: [vNode],
-          successMessage: 'sink DOM produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        auth$: {
-          outputs: ['google', 'facebook'],
-          successMessage: 'sink auth produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-        },
-        user$: {
-          outputs: [],
-          successMessage: 'sink user produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        childrenSinks$: {
-          outputs: [[]],
-          successMessage: 'sink childrenSinks produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-        settings$: {
-          outputs: [{
-            "key": "parent settings",
-            "localSetting": "local setting"
-          }],
-          successMessage: 'sink settings produces the expected values',
-          analyzeTestResults: analyzeTestResults,
-          transformFn: undefined,
-        },
-      }
+      auth$: {
+        outputs: ['google', 'facebook'],
+        successMessage: 'sink auth produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+      },
+      user$: {
+        outputs: [],
+        successMessage: 'sink user produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      childrenSinks$: {
+        outputs: [[]],
+        successMessage: 'sink childrenSinks produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      settings$: {
+        outputs: [{
+          "key": "parent settings",
+          "localSetting": "local setting"
+        }],
+        successMessage: 'sink settings produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
     }
 
     const testFn = function mComponentTestFn(settings) {
@@ -311,7 +307,7 @@ define(function (require) {
       }
     }
 
-    runTestScenario(testSources, testCase, testFn(testSettings), {
+    runTestScenario(inputs, testResults, testFn(testSettings), {
       timeUnit: 10,
       waitForFinishDelay: 30
     })
@@ -394,17 +390,18 @@ define(function (require) {
         done()
       }
 
+      const inputs = [
+        {auth$: {diagram: 'a|', values: {a: 'auth-0'}}},
+        {a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}}},
+        {b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}}},
+        {c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}}},
+        {d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}}},
+        {e: {diagram: 'a|', values: {a: 'e-0'}}},
+      ]
+
       /** @type TestResults */
-      const testCase = {
-        inputs: {
-          auth$: {diagram: 'a|', values: {a: 'auth-0'}},
-          a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
-          b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}},
-          c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}},
-          d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}},
-          e: {diagram: 'a|', values: {a: 'e-0'}},
-        },
-        expected: {
+      const
+        TestResults = {
           DOM: {
             outputs: vNodes,
             successMessage: 'sink DOM produces the expected values',
@@ -441,11 +438,10 @@ define(function (require) {
             transformFn: undefined,
           },
         }
-      }
 
       const testFn = mComponent
 
-      runTestScenario(testSources, testCase, testFn, {
+      runTestScenario(inputs, TestResults, testFn, {
         timeUnit: 50,
         waitForFinishDelay: 100
       })
@@ -499,7 +495,14 @@ define(function (require) {
 
       }, testSettings, [childComponent1, childComponent2])
 
-      const testSources = makeTestSources(['DOM', 'auth$', 'a', 'b', 'c', 'd', 'e'])
+      const inputs = [
+        {auth$: {diagram: 'a|', values: {a: 'auth-0'}}},
+        {a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}}},
+        {b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}}},
+        {c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}}},
+        {d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}}},
+        {e: {diagram: 'a|', values: {a: 'e-0'}}}
+      ]
 
       const vNodes = [
         {
@@ -518,88 +521,252 @@ define(function (require) {
       }
 
       /** @type TestResults */
-      const testCase = {
-        inputs: {
-          auth$: {diagram: 'a|', values: {a: 'auth-0'}},
-          a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}},
-          b: {diagram: 'abc|', values: {a: 'b-0', b: 'b-1', c: 'b-2'}},
-          c: {diagram: 'abc|', values: {a: 'c-0', b: 'c-1', c: 'c-2'}},
-          d: {diagram: 'a-b|', values: {a: 'd-0', b: 'd-2'}},
-          e: {diagram: 'a|', values: {a: 'e-0'}},
+      const testResults = {
+        DOM: {
+          outputs: vNodes,
+          successMessage: 'sink DOM produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
         },
-        expected: {
-          DOM: {
-            outputs: vNodes,
-            successMessage: 'sink DOM produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          user$: {
-            outputs: [],
-            successMessage: 'sink user produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          childrenSinks$: {
-            outputs: [
-              h('div', {}, [
-                h('span', {style: {fontWeight: 'bold'}}, 'child1-a-0'),
-              ]),
-              h('div', {}, [
-                h('span', {style: {fontWeight: 'italic'}}, 'child2-a-0'),
-              ]),
-              h('div', {}, [
-                h('span', {style: {fontWeight: 'bold'}}, 'child1-a-1'),
-              ]),
-              h('div', {}, [
-                h('span', {style: {fontWeight: 'italic'}}, 'child2-a-1'),
-              ]),
-            ],
-            successMessage: 'sink childrenSinks produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          settings$: {
-            outputs: [{}], // When there is no settings, it sets settings to {}
-            successMessage: 'sink settings produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          auth$: {
-            outputs: ["google", "auth-0"],
-            successMessage: 'sink auth$ produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          a: {
-            outputs: [
-              "child1-a-b-0",
-              "child2-a-d-0",
-              "child1-a-b-1",
-              "child1-a-b-2",
-              "child2-a-d-2"
-            ],
-            successMessage: 'sink a produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-          },
-          c: {
-            outputs: ["child1-c-c-0", "child1-c-c-1", "child1-c-c-2"],
-            successMessage: 'sink c produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          d: {
-            outputs: ["child2-e-e-0"],
-            successMessage: 'sink d produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-        }
+        user$: {
+          outputs: [],
+          successMessage: 'sink user produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        childrenSinks$: {
+          outputs: [
+            h('div', {}, [
+              h('span', {style: {fontWeight: 'bold'}}, 'child1-a-0'),
+            ]),
+            h('div', {}, [
+              h('span', {style: {fontWeight: 'italic'}}, 'child2-a-0'),
+            ]),
+            h('div', {}, [
+              h('span', {style: {fontWeight: 'bold'}}, 'child1-a-1'),
+            ]),
+            h('div', {}, [
+              h('span', {style: {fontWeight: 'italic'}}, 'child2-a-1'),
+            ]),
+          ],
+          successMessage: 'sink childrenSinks produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        settings$: {
+          outputs: [{}], // When there is no settings, it sets settings to {}
+          successMessage: 'sink settings produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        auth$: {
+          outputs: ["google", "auth-0"],
+          successMessage: 'sink auth$ produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        a: {
+          outputs: [
+            "child1-a-b-0",
+            "child2-a-d-0",
+            "child1-a-b-1",
+            "child1-a-b-2",
+            "child2-a-d-2"
+          ],
+          successMessage: 'sink a produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+        },
+        c: {
+          outputs: ["child1-c-c-0", "child1-c-c-1", "child1-c-c-2"],
+          successMessage: 'sink c produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        d: {
+          outputs: ["child2-e-e-0"],
+          successMessage: 'sink d produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
       }
 
       const testFn = mComponent
 
-      runTestScenario(testSources, testCase, testFn, {
+      runTestScenario(inputs, testResults, testFn, {
+        timeUnit: 50,
+        waitForFinishDelay: 100
+      })
+
+    })
+
+  QUnit.test(
+    "main cases - great children components - default merge - settings",
+    function exec_test(assert) {
+      let done = assert.async(4)
+
+      const child = {
+        makeOwnSinks: function childMakeOwnSinks(sources, settings) {
+          return {
+            DOM: sources.DOM1.map(makeDivVNode),
+            childSettings$: sources.DOM1.map(always(settings))
+          }
+        }
+      }
+
+      const greatChild = {
+        makeOwnSinks: function greatCMakeOwnSinks(sources, settings) {
+          return {
+            DOM: sources.DOM2.map(makeDivVNode),
+            gCSettings$: sources.DOM2.map(always(settings))
+          }
+        }
+      }
+
+      const parent = {
+        makeOwnSinks: function parentMakeOwnSinks(sources, settings) {
+          return {
+            DOM: sources.DOMp.map(makeDivVNode),
+            parentSettings$: sources.DOMp.map(always(settings))
+          }
+        }
+      }
+
+      const component = m(parent, {parentKey2: 'settingInM'}, [
+        m(child, {childKey1: '.settingInM'}, [
+          m(greatChild, {greatChildKey: '..settingInM'}, [])
+        ])
+      ])
+
+      const inputs = [
+        {DOMp: {diagram: '-a---b--'}},
+        {DOM1: {diagram: '-a--b--c--'}},
+        {DOM2: {diagram: '-a-b-c-d-e-'}},
+      ]
+
+      function makeTestVNode(p, c, gc) {
+        // p: parent, c: child, gc: greatchild
+        return {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "data": {},
+                  "elm": undefined,
+                  "key": undefined,
+                  "sel": "div",
+                  "text": gc
+                }
+
+              ],
+              "data": {},
+              "elm": undefined,
+              "key": undefined,
+              "sel": "div",
+              "text": c
+            }
+          ],
+          "data": {},
+          "elm": undefined,
+          "key": undefined,
+          "sel": "div",
+          "text": p
+        }
+      }
+
+      const vNodes = [
+        makeTestVNode('a', 'a', 'a'),
+        makeTestVNode('a', 'a', 'b'),
+        makeTestVNode('a', 'b', 'b'),
+        makeTestVNode('b', 'b', 'b'),
+        makeTestVNode('b', 'b', 'c'),
+        makeTestVNode('b', 'c', 'c'),
+        makeTestVNode('b', 'c', 'd'),
+        makeTestVNode('b', 'c', 'e'),
+      ]
+
+      function analyzeTestResults(actual, expected, message) {
+        assert.deepEqual(actual, expected, message)
+        done()
+      }
+
+      /** @type TestResults */
+      const testResults = {
+        DOM: {
+          outputs: vNodes,
+          successMessage: 'sink DOM produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        parentSettings$: {
+          outputs: [
+            {"parentKey1": "settingOut", "parentKey2": "settingInM"},
+            {"parentKey1": "settingOut", "parentKey2": "settingInM"}
+          ],
+          successMessage: 'sink parentSettings$ produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        childSettings$: {
+          outputs: [
+            {
+              "childKey1": ".settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }
+          ],
+          successMessage: 'sink childSettings$ produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+        gCSettings$: {
+          outputs: [
+            {
+              "childKey1": ".settingInM",
+              "greatChildKey": "..settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "greatChildKey": "..settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "greatChildKey": "..settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "greatChildKey": "..settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }, {
+              "childKey1": ".settingInM",
+              "greatChildKey": "..settingInM",
+              "parentKey1": "settingOut",
+              "parentKey2": "settingInM"
+            }
+          ], // When there is no settings, it sets settings to {}
+          successMessage: 'sink gCSettings$ produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
+        },
+      }
+
+      const testFn = function (sources, settings) {
+        return component(sources, {parentKey1: 'settingOut'})
+      }
+
+      runTestScenario(inputs, testResults, testFn, {
         timeUnit: 50,
         waitForFinishDelay: 100
       })

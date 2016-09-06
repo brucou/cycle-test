@@ -27,9 +27,7 @@ define(function (require) {
  * @property {!function (Array<Output>, Array<Output>), String} analyzeTestResults
  */
 /**
- * @typedef {Object} TestResults
- * @property {!Object.<string, Sequence>} inputs
- * @property {!Object.<string, ExpectedRecord>} expected
+ * @typedef {!Object.<string, ExpectedRecord>} TestResults
  */
 
 function require_test_utils(Rx, $, R, U) {
@@ -252,7 +250,7 @@ function require_test_utils(Rx, $, R, U) {
    * @throws
    */
   function runTestScenario(inputs, expected, testFn, settings) {
-    assertSignature('_runTestScenario', arguments, [
+    assertSignature('runTestScenario', arguments, [
       {inputs: U.isArrayOf(isSourceInput)},
       {testCase: isExpectedRecord},
       {testFn: U.isFunction},
@@ -347,7 +345,9 @@ function require_test_utils(Rx, $, R, U) {
 
     // execute the function to be tested (for example a cycle component)
     // with the source subjects
+    console.group('runTestScenario: executing test function')
     let testSinks = testFn(sourcesSubjects)
+    console.groupEnd('runTestScenario: executing test function')
     if (!isOptSinks(testSinks)) {
       throw 'encountered a sink which is not an observable!'
     }
@@ -360,7 +360,7 @@ function require_test_utils(Rx, $, R, U) {
       )
 
     assertContract(hasTestCaseForEachSink, [expected, keysR(sinksResults)],
-      '_runTestScenario : in testCase, could not find test inputs for all sinks!'
+      'runTestScenario : in testCase, could not find test inputs for all sinks!'
     )
 
     // Side-effect : execute `analyzeTestResults` function which
@@ -384,88 +384,6 @@ function require_test_utils(Rx, $, R, U) {
       rxlog('An error occurred while emitting test inputs'),
       rxlog('test inputs emitted')
     )
-  }
-
-  /**
-   * Tests a function against sources' test input values and the expected
-   * values defined in a test case object.
-   * The function to test is executed, and its sinks collected. When there are
-   * no more inputs to send through the sources, output from each sink are
-   * collected in an array, then passed through a transform function.
-   * That transform function can be used to remove fields, which are irrelevant
-   * or non-reproducible (for instance timestamps), before comparison.
-   * Actual outputs for each sink are compared against expected outputs,
-   * by means of a `analyzeTestResults` function.
-   * That function can throw in case of failed assertion.
-   *
-   * @param {Object.<string, Subject>} testSources hash of sources,
-   * matching a source name with a subject (usually a `replaySubject(1)`
-   * to reproduce cycle behaviour).
-   * @param {TestResults} testCase Object which contains all the relevant data
-   * relevant to the test case : expected outputs, test message,
-   * comparison function, output transformation, etc.
-   * @param {function(Sources):Sinks} testFn Function to test
-   * @param {{timeUnit: Number, waitForFinishDelay: Number}} settings
-   * @throws
-   */
-  function _runTestScenario(testSources, testCase, testFn, settings) {
-    assertSignature('_runTestScenario', arguments, [
-      {testSources: U.isObject},
-      {testCase: isTestCase},
-      {testFn: U.isFunction},
-      {settings: U.isNullableObject},
-    ])
-
-    // Set default values if any
-    settings = settings || {}
-
-    // Get a hash of input producers matching the hash of sources
-    // In the process, we have started the producers of the test inputs
-    // as defined in the marble diagrams,by subscribing them each to their
-    // corresponding source subject
-    // To err on the side of safety, a replaySubject(1) source is preferred
-    // though it should not be most of the time necessary,
-    // as for most `testFn`, the sinks will be wired on that same tick
-    // This has to be carefully checked when switching to `most` as
-    // its default behavior is to emit the first value on the next tick
-    /** @type {Object.<string, Observable<Input>>} */
-    const sourcesSimulation = mapObjIndexed(
-      sendTestInputsTo(testSources, settings),
-      testCase.inputs
-    )
-
-    // execute the function to be tested (for example a cycle component)
-    let testSinks = testFn(testSources)
-    if (!isOptSinks(testSinks)) {
-      throw 'encountered a sink which is not an observable!'
-    }
-
-    /** @type {Object.<string, Observable<Array<Output>>>} */
-    const sinksResults = mapObjIndexed(
-      getTestResultsOf(sourcesSimulation, testCase, settings),
-      testSinks
-    )
-
-    assertContract(hasTestCaseForEachSink, [testCase, keysR(sinksResults)],
-      '_runTestScenario : in testCase, could not find test inputs for all sinks!'
-    )
-
-    // Side-effect : execute `analyzeTestResults` function which
-    // makes use of `assert` and can lead to program interruption
-    /** @type {Object.<string, Observable<Array<Output>>>} */
-    const resultAnalysis = mapObjIndexed(
-      analyzeTestResults(testCase),
-      sinksResults
-    )
-
-    // This takes care of actually starting the producers
-    // which generate the execution of the test assertions
-    $.merge(valuesR(resultAnalysis))
-      .subscribe(
-        rxlog('Test completed for sink:'),
-        rxlog('An error occurred while executing test!'),
-        rxlog('Tests completed!')
-      )
   }
 
   return {
