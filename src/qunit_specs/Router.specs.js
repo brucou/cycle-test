@@ -55,7 +55,7 @@ define(function (require) {
       [childComponent1, childComponent2])
 
     const inputs = [
-      {_fake: {diagram: '-'}},
+//      {_fake: {diagram: '----------------'}},
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
       {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d-e-f-'}},
       {
@@ -107,6 +107,10 @@ define(function (require) {
         makeVNode(1, 3, 'e'),
         makeVNode(2, 3, 'a'),
       ]),
+      div([
+        makeVNode(1, 3, 'e'),
+        makeVNode(2, 3, 'b'),
+      ]),
     ]
 
     // TODO : adapter test a la nouvelle routine de test
@@ -125,6 +129,8 @@ define(function (require) {
           "Component2 - routeLog - routeRemainder: undefined",
           "Component 1 - routeLog - bruno2",
           "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
           "Component 1 - routeLog - bruno2",
           "Component2 - routeLog - routeRemainder: remainder",
           "Component 1 - routeLog - bruno3",

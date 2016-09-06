@@ -40,10 +40,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const pathR = R.path
   const prepend = R.prepend
 
-  // TODO : I cannot do it with the current componentDef, I need to add a function
-  // which takes the execution of the children into its hand
-  // makeAllSinks (sources, settings, childrenComponents)
-
   // Configuration
   const routeSourceName = 'route$'
 
@@ -54,6 +50,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     return function match(incomingRoute) {
       const matched = rm1.parse(incomingRoute)
       const remainder = rm2.parse(incomingRoute)
+
       return {
         match: matched || remainder
       }
@@ -88,7 +85,8 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     // TODO : check that the mergeR works as expected and route$ will be the
     // new one
-    const sinkNames = prepend('_fake', settings.sinkNames)
+    //    const sinkNames = prepend('_fake', settings.sinkNames)
+    const sinkNames = settings.sinkNames
     // TODO : check that sinkNames is defined (mandatory!!)
     // TODO : check that route is a string and not empty
     let route$ = sources[routeSourceName]
@@ -107,50 +105,64 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     let changedRouteEvents$ = matchedRoute$
       .pluck('match')
       .distinctUntilChanged(x=> {
-        console.log('distinctUntilChanged on : ', x? omit(['routeRemainder'], x) : null)
-        return x? omit(['routeRemainder'], x) : null
+        console.log('distinctUntilChanged on : ', x ? omit(['routeRemainder'], x) : null)
+        return x ? omit(['routeRemainder'], x) : null
       })
       .tap(console.warn.bind(console, 'changedRouteEvents$'))
       .share()
-    let cachedSinks = undefined
+    let cachedSinksS = new Rx.ReplaySubject(1)
+
+    changedRouteEvents$
+      .map(function (params) {
+        let cachedSinks
+        if (params != null) {
+          // compute the children components sinks if not done already
+          //              if (!cachedSinks) {
+          console.info('computing children components sinks', params)
+          const componentFromChildren = m({
+              makeLocalSources: function (sources) {
+                return {
+                  route$: matchedRoute$
+                    .map(pathR(['match', 'routeRemainder']))
+                    .tap(console.warn.bind(console, 'routeRemainder: '))
+                    .share(),
+                }
+              },
+            }, {routeParams: omit(['routeRemainder'], params)},
+            childrenComponents)
+          cachedSinks = componentFromChildren(sources, settings)
+        }
+        else {
+          cachedSinks = null
+        }
+
+        return cachedSinks
+      })
+      .subscribe(cachedSinksS)
 
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: changedRouteEvents$
-          .flatMapLatest(params => {
+        [sinkName]: $.zip(cachedSinksS, changedRouteEvents$, (cachedSinks, params) => {
             if (params != null) {
-              // compute the children components sinks if not done already
-              if (!cachedSinks) {
-                console.info('computing children components sinks for sink ', sinkName, params)
-                const componentFromChildren = m({
-                    makeLocalSources: function (sources) {
-                      return {
-                        route$: matchedRoute$
-                          .map(pathR(['match','routeRemainder']))
-                          .tap(console.warn.bind(console, 'routeRemainder: '))
-                          .share(),
-                      }
-                    },
-                  }, {routeParams: omit(['routeRemainder'], params)},
-                  childrenComponents)
-                cachedSinks = componentFromChildren(sources, settings)
-              }
               return cachedSinks[sinkName] != null ?
                 cachedSinks[sinkName]
                   .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
-                  .finally(function () {
+                  .finally(_ => {
                     console.log('sink ' + sinkName + ': terminating due to' +
-                      ' route change - erasing cache')
-                    cachedSinks = undefined
-                  }) :
+                      ' route change')
+                  })
+                  .takeUntil(changedRouteEvents$)
+                :
                 $.empty()
             }
             else {
+              // new route does not match component route
               console.log('params is null!!! no match for this component on' +
                 ' this route')
               return $.empty()
             }
-          })
+          }
+        ).switch()
       }
     }
 
