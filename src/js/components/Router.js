@@ -1,6 +1,7 @@
 /**
  * Specifications:
- * Usage : m(Router, {route: RouteSpec}, [children components])
+ * Usage : m(Router, {route: RouteSpec, sinkNames: [...]}, [children
+ * components])
  */
 
 define(function (require) {
@@ -19,6 +20,9 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const div = Sdom.div
   const span = Sdom.span
 
+  const assertSignature = U.assertSignature
+  const isString = U.isString
+  const isArray = U.isArray
   const m = U.m
 
   const mapR = R.map
@@ -43,6 +47,8 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   // Configuration
   const routeSourceName = 'route$'
 
+  ///////////
+  // Helpers
   function match(routeToMatch) {
     let rm1 = routeMatcher(routeToMatch)
     let rm2 = routeMatcher(routeToMatch + '/*routeRemainder')
@@ -57,18 +63,42 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     }
   }
 
-  // TODO : documentation
-  // - a route$ top-level source must exist and have a given format (to specify)
-  // - a previousRoute$ top-level source might have to exist too
-  // - settings
-  //   - sinkNames : the names of the sinks to be acted on by the router
-  //                 sinks with non-included sink names will not be passed
-  //                 downstream, hence will not be subscribed by the drivers
-  // TODO : investigate consequences, will have to handle null sinks gracefully
+  function isRouteSettings(obj) {
+    return obj.route && isString(obj.route) &&
+      obj.sinkNames && isArray(obj.sinkNames) && obj.sinkNames.length > 0
+  }
 
+  /**
+   * Definition for a router component which :
+   * - will pass the sinks of its children components iff the new route
+   * matches the route configured for the components
+   * - when the route no longer matches, components sinks are terminated
+   * - when the route matches, changes but keeps the same value, children
+   * sinks remain in place
+   * Route information is read on the `route$` property
+   * Children components pass to their own children a `route$` which is the
+   * `route$` they received from their parent, from which they remove the
+   * part of the route that they have matched (passing what is called here the
+   * remainder).
+   * Params parsed from the matched route are passed to the children
+   * component through their `settings` parameters, with the `routeParams`
+   * property.
+   *
+   * Two settings are necessary :
+   * - route : the route which triggers the component sinks activation
+   * - sinkNames : the list of sinks (names) which must be activated in
+   * response to the matching route
+   *
+   * @param {Sources} sources
+   * @param {{route: string, sinkNames: Array<string>}} settings
+   * @param {Array<Component>} childrenComponents
+   */
   function makeAllSinks(sources, settings, childrenComponents) {
-    // The sink names affected by the router need to be passed through the
-    // settings parameter. As a matter of fact, we cannot know otherwise in
+    const signature = [{settings: isRouteSettings},]
+
+    assertSignature('makeAllSinks', [settings], signature)
+
+    // The sink names are necessary as we cannot know otherwise in
     // advance what are the sinks output by the children components without
     // executing all the children components.
     // However to execute the children components, we need to pass the route
@@ -76,32 +106,20 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     // enter the observable monad, from which we can't get out.
     // This behaviour results in having to handle null cases for sinks (some
     // sinks might be present only on some children components).
-    // To avoid executing many times the `m` helper to compute the sinks,
-    // that computation is executed the first time and then cached for further
-    // access. On termination of the component sinks, the cache is cleaned.
-    // The children components are passed a truncated version of the `route$`
-    // parent source, in which the part of the route matched already by the
-    // parent is removed (this allows for nested routing)
-
-    // TODO : check that the mergeR works as expected and route$ will be the
-    // new one
-    //    const sinkNames = prepend('_fake', settings.sinkNames)
     const sinkNames = settings.sinkNames
-    // TODO : check that sinkNames is defined (mandatory!!)
-    // TODO : check that route is a string and not empty
+
     let route$ = sources[routeSourceName]
       .tap(console.log.bind(console, 'route$'))
-      .share()
+
     let matchedRoute$ = route$.map(match(settings.route))
       .tap(console.warn.bind(console, 'matchedRoute$'))
-      // NOTE : replaying here is mandatory and can only be here, not in route$
-      // That's because the children below are wired with `flatMapLatest`
-      // which itself wires AFTER the `route$` has emitted its value...
-      // This is a common issue with dynamic stream graphs. Connection is a
-      // side-effect, and the moment in which it happens matters
+      // NOTE : replaying here is mandatory
+      // That's because the children are passed `matchedRoute` and
+      // connect to it AFTER the `route$` has emitted its value...
       // In short, while time is abstracted out in the case of a static
-      // graph, it becomes important again in the case of a dynamic graph
+      // graph, dynamic stream graphs come with synchronization pains
       .shareReplay(1)
+
     let changedRouteEvents$ = matchedRoute$
       .pluck('match')
       .distinctUntilChanged(x=> {
@@ -110,14 +128,29 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       })
       .tap(console.warn.bind(console, 'changedRouteEvents$'))
       .share()
+    // Note : must be shared, used twice here
+
     let cachedSinksS = new Rx.ReplaySubject(1)
 
+    // I had tested with executing the `m` helper as many times as sources,
+    // and it seems to work. It is however inefficient as this means
+    // computing unnecessarily the whole component tree under the current
+    // component node. And that for every component...
+    // A naive cache solution gives very close results but shows
+    // synchronization problem that could not be solved (cache is reset
+    // too late or too early).
+    // The current solution consists in using a subject for caching, and
+    // wiring that subject so that its flow executed before the others, so
+    // its cache value is available before it is being needed.
+    // Then dependent flows are forcibly synchronised and combined with
+    // `zip` from which the cached sinks are distributed into their
+    // destination sinks
+    // Sinks who no longer match a given route are terminated with
+    // `takeUntil`.
     changedRouteEvents$
       .map(function (params) {
         let cachedSinks
         if (params != null) {
-          // compute the children components sinks if not done already
-          //              if (!cachedSinks) {
           console.info('computing children components sinks', params)
           const componentFromChildren = m({
               makeLocalSources: function (sources) {
@@ -142,7 +175,8 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: $.zip(cachedSinksS, changedRouteEvents$, (cachedSinks, params) => {
+        [sinkName]: $.zip(cachedSinksS, changedRouteEvents$,
+          (cachedSinks, params) => {
             if (params != null) {
               return cachedSinks[sinkName] != null ?
                 cachedSinks[sinkName]
@@ -167,32 +201,12 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     }
 
     return mergeAllR(mapR(makeRoutedSink, sinkNames))
-
-    // NOTE : source.onRoute$ is there
-    // source.onRoute$ will emit anytime the route has changed
-    // - null : the new route does not match the configured route
-    //   + stop all component sinks
-    // - params : the new route does match the configured route
-    //   + start the component sinks if the params are different from the
-    // previous params
-    // Be careful with keeping previousRoute with a `scan` here because
-    // if there is a router component upwards, there might be unsubscribing,
-    // resubscribing happening which destroy the state hold by that scan...
-    // TODO : source.onRoute$ must be shared!! but not sharedReplayed it has to
-    // be an event OR??
-
-    // TODO: might need a top level previousRoute$ source
-    // like m(Router, ...) which only create route$, and previousRoute$, so it
-    // never completes
   }
 
   return {
     makeAllSinks: makeAllSinks
   }
 }
-
-// TODO : add test also for sinks settings : all there, missing some, extra,
-// none
 
 // test
 // 1. non-nested routing x components x (matches 1/no matches/matches
