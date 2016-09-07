@@ -56,7 +56,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     return function match(incomingRoute) {
       if (isNil(incomingRoute)) {
         return {
-          match : null
+          match: null
         }
       }
 
@@ -89,9 +89,17 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * Params parsed from the matched route are passed to the children
    * component through their `settings` parameters, with the `routeParams`
    * property.
+   * The `route$` property can be but should not be manipulated directly out
+   * of a `Router` component.
    *
    * Two settings are necessary :
-   * - route : the route which triggers the component sinks activation
+   * - route : the route which triggers the component sinks activation.
+   *   1. Note that a route value of `undefined` will produce no matching,
+   *   while a value of `""` will match `":user"` !
+   *   2. Every new nested route will trigger the emission of a nested route
+   *   value, even if that new nested route value is the same as the
+   *   previous one.
+   *
    * - sinkNames : the list of sinks (names) which must be activated in
    * response to the matching route
    *
@@ -119,7 +127,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     const trace = 'router:' + (settings.trace || "")
 
     let route$ = sources[routeSourceName]
-      .tap(console.log.bind(console, 'route$'))
+      .tap(console.error.bind(console, 'route$'))
 
     let matchedRoute$ = route$.map(match(settings.route))
       .tap(console.warn.bind(console, trace + '|matchedRoute$'))
@@ -176,7 +184,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
                       ' changedRouteEvents$' +
                       ' : routeRemainder: '))
                     .share(),
-                  ['router:' + (settings.trace || "")]: $.of("")
+                  'router': $.of("")
                 }
               },
             }, {
@@ -203,7 +211,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
                 cachedSinks[sinkName]
                   .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
                   .finally(_ => {
-                    console.log('sink ' + sinkName + ': terminating due to' +
+                    console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
                       ' route change')
                   })
                   .takeUntil(changedRouteEvents$)

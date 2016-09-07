@@ -729,6 +729,8 @@ define(function (require) {
         },
         gCSettings$: {
           outputs: [
+            {TODO: 'add a setting key which is the same to check also merge' +
+            ' order'}, // TODO
             {
               "childKey1": ".settingInM",
               "greatChildKey": "..settingInM",

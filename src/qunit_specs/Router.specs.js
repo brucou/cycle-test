@@ -1,3 +1,4 @@
+"use strict";
 define(function (require) {
   const U = require('util')
   const R = require('ramda');
@@ -183,12 +184,16 @@ define(function (require) {
 
   QUnit.test("main cases - nested routing", function exec_test(assert) {
     let done = assert.async(4)
+    let counter = 0
 
     const childComponent = {
       makeOwnSinks: function (sources, settings) {
         console.group("executing childComponent own")
         console.log('sources, settings', sources, settings)
         console.groupEnd("executing childComponent own")
+        let user = settings.routeParams.user
+        counter++ === 0 && (user = 'fake')
+        console.error('settings.routeParams user', user, counter)
 
         return {
           DOM: sources.DOM1.take(4)
@@ -199,9 +204,13 @@ define(function (require) {
           routeLog: sources.route$
             .tap(console.warn.bind(console, 'routeLog : child component -' +
               ' route$'))
-            .map(x => 'Child component 1 - routeLog - ' + settings.routeParams.user),
+            .map(function(x) {
+            return 'Child component 1 - routeLog - ' + user + '-' + counter
+            }),
+          //            .map(x => 'Child component 1 - routeLog - ' +
+          // _settings.routeParams.user),
           userAction1$: sources.userAction$.map(x => 'child component - user' +
-          ' action - ' + x)
+          ' action - ' + x).startWith('child component - starting')
         }
       }
     }
@@ -220,17 +229,24 @@ define(function (require) {
         routeLog: sources.route$
           .tap(console.warn.bind(console, 'routeLog : great child component -' +
             ' route$'))
-          .map(x => 'great child component 1 - routeLog - ' + settings.routeParams.user + settings.routeParams.id),
+          .map(x => 'great child component - routeLog - ' + settings.routeParams.user + settings.routeParams.id),
         userAction2$: sources.userAction$.map(x => 'great child component -' +
-        ' user action - ' + x),
+        ' user action - ' + x).startWith('great child component - starting'),
         notMerged: sources.DOM1.map(x => 'ERROR')
           .tap(console.log.bind(console, 'notMerged:'))
       }
     }
 
-    console.group('creating mComponent')
+    // TODO : be careful about mutation of sinkNames... it is passed down
+    // the children, so only need to use it once, but what if we need a
+    // different sinknames at a lower level?? should be fine but better test
+    console.groupCollapsed('creating mComponent')
     const mComponent = m(Router,
-      {route: ':user', sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$'], trace: 'top'},
+      {
+        route: ':user',
+        sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$', 'router'],
+        trace: 'top'
+      },
       [
         m(childComponent, {trace: 'middle'}, [
           m(Router, {route: ':id', trace: 'bottom'}, [greatChildComponent])
@@ -250,14 +266,15 @@ define(function (require) {
       {DOM2: {diagram: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
       {
         userAction$: {
-          diagram: 'a---b-ac--ab---c',
+          diagram: 'a---b-ac--aba--c',
           values: {a: 'click', b: 'select', c: 'hover',}
         }
       },
       {
         route$: {
-          //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
-          //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
+          //diagr: '-a--b--c--d--e--f--a--b--c--d-'}},
+          //diagr: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
+          //userA: 'a---b-ac--aba--c',
           diagram: '-a---b--cdef--g-h-', values: {
             a: 'bruno/1',
             b: 'ted',
@@ -265,8 +282,8 @@ define(function (require) {
             d: 'bruno/2/remainder',
             e: 'bruno/2/remainder',
             f: 'bruno/3/bigger/remainder',
-            g: 'paul',
-            h: '',
+            g: '',
+            h: undefined,
           }
         }
       }
@@ -287,6 +304,12 @@ define(function (require) {
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },
+      router: {
+        outputs: [],
+        successMessage: 'sink router produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
       routeLog: {
         outputs: [],
         successMessage: 'sink routeLog produces the expected values',
@@ -294,13 +317,33 @@ define(function (require) {
         transformFn: undefined,
       },
       userAction1$: {
-        outputs: [],
+        outputs: [
+          "child component - starting",
+          "child component - user action - select",
+          "child component - starting",
+          "child component - user action - click",
+          "child component - user action - hover",
+          "child component - starting",
+          "child component - user action - click",
+          "child component - user action - select",
+          "child component - user action - click",
+          "child component - starting",
+          "child component - user action - hover",
+        ],
         successMessage: 'sink userAction1$ produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },
       userAction2$: {
-        outputs: [],
+        outputs: [
+          "great child component - starting",
+          "great child component - user action - select",
+          "great child component - starting",
+          "great child component - user action - click",
+          "great child component - user action - select",
+          "great child component - starting",
+          "great child component - user action - click"
+        ],
         successMessage: 'sink userAction2$ produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,

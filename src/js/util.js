@@ -133,6 +133,9 @@ function require_util(Rx, $, R, Sdom) {
         let sinks = componentDef.makeAllSinks(sources, mergedSettings, children)
         assertSinksContracts(sources, sinksContract)
 
+        // TODO :WHERE IS THE MERGE!!!!!!
+        // makeAllSinks returns sinks, but are they merged??
+
         // TODO : factor out the trace too so I don't duplicate it
         const tracedSinks = trace(sinks, mergedSettings)
 
@@ -147,7 +150,7 @@ function require_util(Rx, $, R, Sdom) {
         console.group('m component function:')
         console.log('sources, innerSettings', sources, innerSettings)
 
-//        const mergedSettings = mergeR(_settings, innerSettings)
+        //        const mergedSettings = mergeR(_settings, innerSettings)
         const mergedSettings = mergeR(innerSettings, _settings) // TODO !!
 
         assertSourcesContracts(sources, sourcesContract)
@@ -166,8 +169,11 @@ function require_util(Rx, $, R, Sdom) {
           makeLocalSettings(mergedSettings)
         )
 
+        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ' : makeOwnSinks:')
+        console.log('extendedSources, localSettings', extendedSources, localSettings)
         const ownSinks = makeOwnSinks(extendedSources, localSettings)
         if (!ownSinks) console.warn('ownSinks : null!!!')
+        console.groupEnd()
 
         console.group('m - computing children sinks')
         const childrenSinks = mapR(
@@ -179,7 +185,10 @@ function require_util(Rx, $, R, Sdom) {
         assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
 
         // merge the sinks from children and one-s own...
+        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ' : mergeSinks :')
+        console.log('ownSinks, childrenSinks, localSettings', ownSinks, childrenSinks, localSettings)
         const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
+        console.groupEnd()
 
         assertSinksContracts(reducedSinks, sinksContract)
 
@@ -538,8 +547,6 @@ function require_util(Rx, $, R, Sdom) {
 
       if (sinkName === 'DOM') {
         value = mergeDOMSinksDefault(parentSinks, childrenSinks)
-      } else if (sinkName === routeSourceName) {
-        value = mergeRouteSinksDefault(parentSinks, childrenSinks)
       } else {
         value = mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName)
       }
@@ -547,17 +554,6 @@ function require_util(Rx, $, R, Sdom) {
       accSinks[sinkName] = value
       return accSinks
     }
-  }
-
-  function mergeRouteSinksDefault(parentSinks, childrenSinks) {
-    // TODO : STUPID!!! route$ is not a sink...
-    // In the case of routing, each child has its own route source
-    // This means children route data are local to the children
-    // and should not be propagated up to the parent
-    console.group('mergeRouteSinksDefault')
-    console.log('parentSinks, childrenSinks', parentSinks, childrenSinks)
-    console.groupEnd()
-    return parentSinks[routeSourceName]
   }
 
   /**

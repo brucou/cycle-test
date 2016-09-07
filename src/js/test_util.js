@@ -323,7 +323,7 @@ function require_test_utils(Rx, $, R, U) {
                   // In any case, there is nothing to emit
                   switch (c) {
                     case '-':
-                      console.log('- doing nothing')
+                      //                      console.log('- doing nothing')
                       break;
                     case '#':
                       sourceSubject.onError({data: errorVal})
@@ -345,7 +345,7 @@ function require_test_utils(Rx, $, R, U) {
 
     // execute the function to be tested (for example a cycle component)
     // with the source subjects
-    console.group('runTestScenario: executing test function')
+    console.groupCollapsed('runTestScenario: executing test function')
     let testSinks = testFn(sourcesSubjects)
     console.groupEnd('runTestScenario: executing test function')
     if (!isOptSinks(testSinks)) {
@@ -380,7 +380,7 @@ function require_test_utils(Rx, $, R, U) {
         rxlog('Tests completed!')
       )
     testInputs$.subscribe(
-      function(){},
+      function () {},
       rxlog('An error occurred while emitting test inputs'),
       rxlog('test inputs emitted')
     )
