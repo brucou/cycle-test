@@ -192,14 +192,13 @@ define(function (require) {
         console.log('sources, settings', sources, settings)
         console.groupEnd("executing childComponent own")
         let user = settings.routeParams.user
-        counter++ === 0 && (user = 'fake')
-        console.error('settings.routeParams user', user, counter)
+        console.error('settings.routeParams user', user, ++counter)
 
         return {
           DOM: sources.DOM1.take(4)
             .tap(console.warn.bind(console, 'DOM : child component : '))
             .map(x => h('span', {},
-              'Child component : id=' + settings.routeParams.user + ' - ' + x))
+              'Child component : id=' + user + ' - ' + x))
             .concat($.never()),
           routeLog: sources.route$
             .tap(console.warn.bind(console, 'routeLog : child component -' +
@@ -207,8 +206,6 @@ define(function (require) {
             .map(function(x) {
             return 'Child component 1 - routeLog - ' + user + '-' + counter
             }),
-          //            .map(x => 'Child component 1 - routeLog - ' +
-          // _settings.routeParams.user),
           userAction1$: sources.userAction$.map(x => 'child component - user' +
           ' action - ' + x).startWith('child component - starting')
         }
@@ -229,7 +226,11 @@ define(function (require) {
         routeLog: sources.route$
           .tap(console.warn.bind(console, 'routeLog : great child component -' +
             ' route$'))
-          .map(x => 'great child component - routeLog - ' + settings.routeParams.user + settings.routeParams.id),
+          .map(x => [
+            'great child component - routeLog -',
+            '(user: ' + settings.routeParams.user + ',',
+            'id: ' + settings.routeParams.id + ')'
+          ].join(' ')),
         userAction2$: sources.userAction$.map(x => 'great child component -' +
         ' user action - ' + x).startWith('great child component - starting'),
         notMerged: sources.DOM1.map(x => 'ERROR')
@@ -244,7 +245,7 @@ define(function (require) {
     const mComponent = m(Router,
       {
         route: ':user',
-        sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$', 'router'],
+        sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$'],
         trace: 'top'
       },
       [
@@ -301,12 +302,6 @@ define(function (require) {
       DOM: {
         outputs: vNodes,
         successMessage: 'sink DOM produces the expected values',
-        analyzeTestResults: analyzeTestResults,
-        transformFn: undefined,
-      },
-      router: {
-        outputs: [],
-        successMessage: 'sink router produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },

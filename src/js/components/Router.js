@@ -184,7 +184,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
                       ' changedRouteEvents$' +
                       ' : routeRemainder: '))
                     .share(),
-                  'router': $.of("")
                 }
               },
             }, {
@@ -204,8 +203,8 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: $.zip(cachedSinksS, changedRouteEvents$,
-          (cachedSinks, params) => {
+        [sinkName]: changedRouteEvents$.combineLatest(cachedSinksS,
+          (params, cachedSinks) => {
             if (params != null) {
               return cachedSinks[sinkName] != null ?
                 cachedSinks[sinkName]
