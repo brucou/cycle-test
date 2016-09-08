@@ -148,7 +148,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       .share()
     // Note : must be shared, used twice here
 
-    let cachedSinksS = new Rx.ReplaySubject(1)
+    let cachedSinksS = new Rx.Subject
 
     // I had tested with executing the `m` helper as many times as sources,
     // and it seems to work. It is however inefficient as this means
@@ -203,7 +203,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: changedRouteEvents$.combineLatest(cachedSinksS,
+        [sinkName]: changedRouteEvents$.withLatestFrom(cachedSinksS,
           (params, cachedSinks) => {
             if (params != null) {
               return cachedSinks[sinkName] != null ?

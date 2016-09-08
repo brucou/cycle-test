@@ -204,7 +204,7 @@ define(function (require) {
             .tap(console.warn.bind(console, 'routeLog : child component -' +
               ' route$'))
             .map(function(x) {
-            return 'Child component 1 - routeLog - ' + user + '-' + counter
+            return 'Child component 1 - routeLog - ' + user //+ '-' + counter
             }),
           userAction1$: sources.userAction$.map(x => 'child component - user' +
           ' action - ' + x).startWith('child component - starting')

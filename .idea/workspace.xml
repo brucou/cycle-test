@@ -207,40 +207,40 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Router.specs.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Router.specs.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="256">
-              <caret line="271" column="9" selection-start-line="271" selection-start-column="9" selection-end-line="271" selection-end-column="9" />
+            <state relative-caret-position="389">
+              <caret line="206" column="62" selection-start-line="206" selection-start-column="62" selection-end-line="206" selection-end-column="62" />
               <folding>
                 <element signature="e#840#1406#0" expanded="true" />
                 <element signature="e#1479#2000#0" expanded="true" />
                 <element signature="e#2902#3001#0" expanded="true" />
                 <element signature="e#5250#5320#0" expanded="true" />
-                <element signature="e#5823#6789#0" expanded="true" />
-                <element signature="e#6530#6621#0" expanded="true" />
-                <element signature="e#6877#7940#0" expanded="true" />
-                <element signature="e#11673#11743#0" expanded="true" />
+                <element signature="e#6879#7942#0" expanded="true" />
+                <element signature="e#11675#11745#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Router.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Router.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="503">
-              <caret line="204" column="14" selection-start-line="204" selection-start-column="14" selection-end-line="204" selection-end-column="14" />
+            <state relative-caret-position="342">
+              <caret line="233" column="0" selection-start-line="233" selection-start-column="0" selection-end-line="233" selection-end-column="0" />
               <folding>
                 <element signature="e#139#422#0" expanded="true" />
                 <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
                 <element signature="e#1421#1676#0" expanded="true" />
                 <element signature="n#!!block;n#isRouteSettings#0;n#!!block;n#require_router_component#0" expanded="true" />
+                <element signature="n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
                 <element signature="e#5058#5211#0" expanded="true" />
-                <element signature="e#6343#7461#0" expanded="true" />
-                <element signature="e#6593#7130#0" expanded="true" />
-                <element signature="e#7653#8390#0" expanded="true" />
-                <element signature="e#7888#8037#0" expanded="true" />
+                <element signature="e#6334#7452#0" expanded="true" />
+                <element signature="e#6584#7121#0" expanded="true" />
+                <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
+                <element signature="e#7645#8382#0" expanded="true" />
+                <element signature="e#7880#8029#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -265,10 +265,12 @@
       <file leaf-file-name="util.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/js/util.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="389">
-              <caret line="136" column="60" selection-start-line="136" selection-start-column="60" selection-end-line="136" selection-end-column="60" />
+            <state relative-caret-position="144">
+              <caret line="435" column="11" selection-start-line="435" selection-start-column="11" selection-end-line="435" selection-end-column="11" />
               <folding>
                 <element signature="e#26#195#0" expanded="true" />
+                <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+                <element signature="e#4515#5284#0" expanded="true" />
                 <element signature="e#5375#9756#0" expanded="true" />
                 <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
                 <element signature="e#10528#10566#0" expanded="true" />
@@ -344,8 +346,8 @@
         <option value="$PROJECT_DIR$/src/qunit_specs/m.specs.js" />
         <option value="$PROJECT_DIR$/src/js/test_util.js" />
         <option value="$PROJECT_DIR$/src/js/util.js" />
-        <option value="$PROJECT_DIR$/src/qunit_specs/Router.specs.js" />
         <option value="$PROJECT_DIR$/src/js/components/Router.js" />
+        <option value="$PROJECT_DIR$/src/qunit_specs/Router.specs.js" />
       </list>
     </option>
   </component>
@@ -562,12 +564,12 @@
       <workItem from="1472780001378" duration="10137000" />
       <workItem from="1472808647850" duration="45608000" />
       <workItem from="1473058862407" duration="65340000" />
-      <workItem from="1473200801967" duration="18252000" />
+      <workItem from="1473200801967" duration="19821000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="139337000" />
+    <option name="totallyTimeSpent" value="140906000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="119" y="0" width="1161" height="800" extended-state="0" />
@@ -667,6 +669,8 @@
           <caret line="636" column="21" selection-start-line="636" selection-start-column="21" selection-end-line="636" selection-end-column="21" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -856,11 +860,13 @@
             <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
             <element signature="e#1421#1676#0" expanded="true" />
             <element signature="n#!!block;n#isRouteSettings#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
             <element signature="e#5058#5211#0" expanded="true" />
-            <element signature="e#6343#7461#0" expanded="true" />
-            <element signature="e#6593#7130#0" expanded="true" />
-            <element signature="e#7653#8390#0" expanded="true" />
-            <element signature="e#7888#8037#0" expanded="true" />
+            <element signature="e#6334#7452#0" expanded="true" />
+            <element signature="e#6584#7121#0" expanded="true" />
+            <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="e#7645#8382#0" expanded="true" />
+            <element signature="e#7880#8029#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -918,6 +924,8 @@
           <caret line="461" column="33" selection-start-line="461" selection-start-column="22" selection-end-line="461" selection-end-column="48" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -1151,6 +1159,8 @@
           <caret line="68" column="0" selection-start-line="63" selection-start-column="0" selection-end-line="68" selection-end-column="0" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -1377,6 +1387,8 @@
           <caret line="221" column="0" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -1603,6 +1615,8 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -1836,6 +1850,8 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -2026,10 +2042,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/js/util.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
-          <caret line="136" column="60" selection-start-line="136" selection-start-column="60" selection-end-line="136" selection-end-column="60" />
+        <state relative-caret-position="144">
+          <caret line="435" column="11" selection-start-line="435" selection-start-column="11" selection-end-line="435" selection-end-column="11" />
           <folding>
             <element signature="e#26#195#0" expanded="true" />
+            <element signature="n#!!block;n#m#0;n#!!block;n#require_util#0" expanded="true" />
+            <element signature="e#4515#5284#0" expanded="true" />
             <element signature="e#5375#9756#0" expanded="true" />
             <element signature="n#!!block;n#assertSignature#0;n#!!block;n#require_util#0" expanded="true" />
             <element signature="e#10528#10566#0" expanded="true" />
@@ -2070,6 +2088,26 @@
             <element signature="e#23570#23752#0" expanded="true" />
             <element signature="e#23858#24478#0" expanded="true" />
             <element signature="n#!!block;n#makeDivVNode#0;n#!!block;n#require_util#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="233" column="0" selection-start-line="233" selection-start-column="0" selection-end-line="233" selection-end-column="0" />
+          <folding>
+            <element signature="e#139#422#0" expanded="true" />
+            <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="e#1421#1676#0" expanded="true" />
+            <element signature="n#!!block;n#isRouteSettings#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="e#5058#5211#0" expanded="true" />
+            <element signature="e#6334#7452#0" expanded="true" />
+            <element signature="e#6584#7121#0" expanded="true" />
+            <element signature="n#!!block;n#makeRoutedSink#0;n#!!block;n#makeAllSinks#0;n#!!block;n#require_router_component#0" expanded="true" />
+            <element signature="e#7645#8382#0" expanded="true" />
+            <element signature="e#7880#8029#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2195,35 +2233,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="256">
-          <caret line="271" column="9" selection-start-line="271" selection-start-column="9" selection-end-line="271" selection-end-column="9" />
+        <state relative-caret-position="389">
+          <caret line="206" column="62" selection-start-line="206" selection-start-column="62" selection-end-line="206" selection-end-column="62" />
           <folding>
             <element signature="e#840#1406#0" expanded="true" />
             <element signature="e#1479#2000#0" expanded="true" />
             <element signature="e#2902#3001#0" expanded="true" />
             <element signature="e#5250#5320#0" expanded="true" />
-            <element signature="e#5823#6789#0" expanded="true" />
-            <element signature="e#6530#6621#0" expanded="true" />
-            <element signature="e#6877#7940#0" expanded="true" />
-            <element signature="e#11673#11743#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/js/components/Router.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="503">
-          <caret line="204" column="14" selection-start-line="204" selection-start-column="14" selection-end-line="204" selection-end-column="14" />
-          <folding>
-            <element signature="e#139#422#0" expanded="true" />
-            <element signature="n#!!block;n#match#0;n#!!block;n#require_router_component#0" expanded="true" />
-            <element signature="e#1421#1676#0" expanded="true" />
-            <element signature="n#!!block;n#isRouteSettings#0;n#!!block;n#require_router_component#0" expanded="true" />
-            <element signature="e#5058#5211#0" expanded="true" />
-            <element signature="e#6343#7461#0" expanded="true" />
-            <element signature="e#6593#7130#0" expanded="true" />
-            <element signature="e#7653#8390#0" expanded="true" />
-            <element signature="e#7888#8037#0" expanded="true" />
+            <element signature="e#6879#7942#0" expanded="true" />
+            <element signature="e#11675#11745#0" expanded="true" />
           </folding>
         </state>
       </provider>
