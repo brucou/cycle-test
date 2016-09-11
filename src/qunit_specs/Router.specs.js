@@ -1,4 +1,3 @@
-"use strict";
 define(function (require) {
   const U = require('util')
   const R = require('ramda');
@@ -7,6 +6,7 @@ define(function (require) {
   const routeMatcher = require('route_matcher').routeMatcher
   const $ = Rx.Observable
   const Sdom = require('cycle-snabbdom')
+  const Sdom2html = require('snabbdom-to-html').toHTML
   const h = Sdom.h
   const div = Sdom.div
   const span = Sdom.span
@@ -17,6 +17,8 @@ define(function (require) {
   const reduceR = R.reduce
   const makeTestSources = tutils.makeTestSources
   const projectSinksOn = U.projectSinksOn
+
+  s = Sdom2html
 
   QUnit.module("Testing Router component", {})
 
@@ -198,13 +200,13 @@ define(function (require) {
           DOM: sources.DOM1.take(4)
             .tap(console.warn.bind(console, 'DOM : child component : '))
             .map(x => h('span', {},
-              'Child component : id=' + user + ' - ' + x))
+              'Child component : user=' + user + ' - ' + x))
             .concat($.never()),
           routeLog: sources.route$
             .tap(console.warn.bind(console, 'routeLog : child component -' +
               ' route$'))
-            .map(function(x) {
-            return 'Child component 1 - routeLog - ' + user //+ '-' + counter
+            .map(function (x) {
+              return 'Child component 1 - routeLog - ' + user //+ '-' + counter
             }),
           userAction1$: sources.userAction$.map(x => 'child component - user' +
           ' action - ' + x).startWith('child component - starting')
@@ -273,9 +275,9 @@ define(function (require) {
       },
       {
         route$: {
+          //userA: 'a---b-ac--aba--c',
           //diagr: '-a--b--c--d--e--f--a--b--c--d-'}},
           //diagr: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
-          //userA: 'a---b-ac--aba--c',
           diagram: '-a---b--cdef--g-h-', values: {
             a: 'bruno/1',
             b: 'ted',
@@ -289,13 +291,65 @@ define(function (require) {
         }
       }
     ]
+    //TODO : add a ted/1 after bruno/1 to test that even if the children route
+    // is the same it still redraws because the parent has changed
+    // TODO : also after undefined, put again some sources
 
-    function makeVNode(componentNum, id, x) {
-      return h('span', {},
-        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+    function makeVNode(user, id, x, y) {
+      return y != null ? {
+        "children": [
+          {
+            "children": [],
+            "data": {},
+            "elm": undefined,
+            "key": undefined,
+            "sel": undefined,
+            "text": `Child component : user=${user} - ${x}`
+          },
+          {
+            "children": undefined,
+            "data": {},
+            "elm": undefined,
+            "key": undefined,
+            "sel": "span",
+            "text": `Great child component : id=${id} - ${y}`
+          }
+        ],
+        "data": {},
+        "elm": undefined,
+        "key": undefined,
+        "sel": "span",
+        "text": undefined
+      } : {
+        "children": [
+          {
+            "children": [],
+            "data": {},
+            "elm": undefined,
+            "key": undefined,
+            "sel": undefined,
+            "text": `Child component : user=${user} - ${x}`
+          },
+        ],
+        "data": {},
+        "elm": undefined,
+        "key": undefined,
+        "sel": "span",
+        "text": undefined
+      }
     }
 
-    const vNodes = []
+    const vNodes = [
+      makeVNode('bruno', 1, 'b', 'b'),
+      makeVNode('bruno', 1, 'b', 'c'),
+      makeVNode('ted', 1, 'c', null),
+      makeVNode('bruno', 2, 'd', 'e'),
+      makeVNode('bruno', 2, 'd', 'f'),
+      makeVNode('bruno', 3, 'e', null),
+      makeVNode('bruno', 3, 'e', 'a'),
+      makeVNode('', 3, 'f', null),
+      null
+    ]
 
     /** @type TestResults */
     const expected = {
@@ -306,7 +360,20 @@ define(function (require) {
         transformFn: undefined,
       },
       routeLog: {
-        outputs: [],
+        outputs: [
+          "Child component 1 - routeLog - bruno",
+          "great child component - routeLog - (user: undefined, id: 1)",
+          "Child component 1 - routeLog - ted",
+          "Child component 1 - routeLog - bruno",
+          "great child component - routeLog - (user: undefined, id: 2)",
+          "Child component 1 - routeLog - bruno",
+          "great child component - routeLog - (user: undefined, id: 2)",
+          "Child component 1 - routeLog - bruno",
+          "great child component - routeLog - (user: undefined, id: 2)",
+          "Child component 1 - routeLog - bruno",
+          "great child component - routeLog - (user: undefined, id: 3)",
+          "Child component 1 - routeLog - "
+        ],
         successMessage: 'sink routeLog produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
@@ -353,7 +420,7 @@ define(function (require) {
     const testFn = mComponent
 
     runTestScenario(inputs, expected, testFn, {
-      tickDuration: 10,
+      tickDuration: 5,
       waitForFinishDelay: 100
     })
 

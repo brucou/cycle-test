@@ -42,6 +42,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const uniq = R.uniq
   const omit = R.omit
   const pathR = R.path
+  const complement = R.complement
   const prepend = R.prepend
 
   // Configuration
@@ -95,10 +96,13 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * Two settings are necessary :
    * - route : the route which triggers the component sinks activation.
    *   1. Note that a route value of `undefined` will produce no matching,
-   *   while a value of `""` will match `":user"` !
+   *   while a value of `""` will match `":user"` ! See the tests
    *   2. Every new nested route will trigger the emission of a nested route
    *   value, even if that new nested route value is the same as the
    *   previous one.
+   *   3. In the routed component, the `route$` will emit the matched
+   *   portion of the route. However, the same information is already broken
+   *   down in `routeParams` and should be read from there.
    *
    * - sinkNames : the list of sinks (names) which must be activated in
    * response to the matching route
@@ -148,7 +152,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       .share()
     // Note : must be shared, used twice here
 
-    let cachedSinksS = new Rx.Subject
+    //    let cachedSinksS = new Rx.Subject
 
     // I had tested with executing the `m` helper as many times as sources,
     // and it seems to work. It is however inefficient as this means
@@ -165,7 +169,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     // destination sinks
     // Sinks who no longer match a given route are terminated with
     // `takeUntil`.
-    changedRouteEvents$
+    const cachedSinksS = changedRouteEvents$
       .map(function (params) {
         let cachedSinks
 
@@ -199,7 +203,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
         return cachedSinks
       })
-      .subscribe(cachedSinksS)
+      .share()
 
     function makeRoutedSink(sinkName) {
       return {
@@ -207,21 +211,26 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
           (params, cachedSinks) => {
             if (params != null) {
               return cachedSinks[sinkName] != null ?
-                cachedSinks[sinkName]
+                $.concat(cachedSinks[sinkName]
                   .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
                   .finally(_ => {
                     console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
                       ' route change')
                   })
-                  .takeUntil(changedRouteEvents$)
+                  //.takeUntil(changedRouteEvents$)
+                  ,
+                  $.of(null).tap(x=>console.error('EEEEEEE'))
+            )
+//                  .filter(complement(isNil))
+//                  .startWith(null)
                 :
-                $.empty()
+                $.of(null)
             }
             else {
               // new route does not match component route
               console.log('params is null!!! no match for this component on' +
                 ' this route')
-              return $.empty()
+              return $.of(null) // TODO : DOC : no sink should emit null!!!
             }
           }
         ).switch()

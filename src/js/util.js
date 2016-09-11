@@ -122,19 +122,15 @@ function require_util(Rx, $, R, Sdom) {
       console.groupEnd()
 
       return function m(sources, innerSettings) {
-        console.group('m router component function - ' + _settings.trace || "" + ':')
+        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ':')
         console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
 
         assertSourcesContracts(sources, sourcesContract)
 
-        const mergedSettings = mergeR(innerSettings, _settings) // TODO !!
-        // inverted order!!
+        const mergedSettings = mergeR(innerSettings, _settings)
 
         let sinks = componentDef.makeAllSinks(sources, mergedSettings, children)
         assertSinksContracts(sources, sinksContract)
-
-        // TODO :WHERE IS THE MERGE!!!!!!
-        // makeAllSinks returns sinks, but are they merged??
 
         // TODO : factor out the trace too so I don't duplicate it
         const tracedSinks = trace(sinks, mergedSettings)
@@ -147,11 +143,11 @@ function require_util(Rx, $, R, Sdom) {
     else {
       console.groupEnd()
       return function m(sources, innerSettings) {
-        console.group('m component function:')
+        console.groupCollapsed('m component function:')
         console.log('sources, innerSettings', sources, innerSettings)
 
         //        const mergedSettings = mergeR(_settings, innerSettings)
-        const mergedSettings = mergeR(innerSettings, _settings) // TODO !!
+        const mergedSettings = mergeR(innerSettings, _settings)
 
         assertSourcesContracts(sources, sourcesContract)
 
@@ -390,7 +386,7 @@ function require_util(Rx, $, R, Sdom) {
 
   function isOptSinks(obj) {
     // obj can be null
-    return !obj || allR(eitherR(isUndefined, isObservable), valuesR(obj))
+    return !obj || allR(eitherR(isNil, isObservable), valuesR(obj))
   }
 
   function isArrayOptSinks(arrSinks) {
@@ -442,27 +438,58 @@ function require_util(Rx, $, R, Sdom) {
     return reject(isNil, arr)
   }
 
+
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
-      // TODO : add a test that isArrayVNode
-      // to defend against people using DOM source but not passing VNode
-      assertContract(isArrayOf(isVNode), [arrayVNode], 'DOM sources must' +
-        ' stream VNode objects! Got ' + arrayVNode)
+      // We remove null elements from the array of vNode
+      // We can have a null vNode emitted by a sink if that sink is empty
+      let _arrayVNode = removeNullsFromArray(arrayVNode)
+      assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
+        ' stream VNode objects! Got ' + _arrayVNode)
 
       if (parentDOMSink) {
         // Case : the parent sinks have a DOM sink
-        let parentVNode = cloneR(arrayVNode.shift())
-        let childrenVNode = arrayVNode
-        parentVNode.children = parentVNode.children || []
-        // Add the children vNodes produced by the children sinks
-        // after the existing children produced by the parent sink
-        Array.prototype.push.apply(parentVNode.children, childrenVNode)
+        // We want to put the children's DOM **inside** the parent's DOM
+        // Two cases here :
+        // - The parent's vNode has a `text` property :
+        //   we move that text to a text vNode at first position in the children
+        //   then we add the children's DOM in last position of the
+        // existing parent's children
+        // - The parent's vNode does not have a `text` property :
+        //   we just add the children's DOM in last position of the exisitng
+        //   parent's children
+        // Note that this is specific to the snabbdom vNode data structure
+        // Note that we defensively clone vNodes so the original vNode remains
+        // immuted
+        let parentVNode = cloneR(_arrayVNode.shift())
+        let childrenVNode = _arrayVNode
+        parentVNode.children = cloneR(parentVNode.children) || []
+
+        // childrenVNode could be null if all children sinks are empty
+        // observables, in which case we just return the parentVNode
+        if (childrenVNode) {
+          if (parentVNode.text) {
+            parentVNode.children.splice(0, 0, {
+              children: [],
+              "data": {},
+              "elm": undefined,
+              "key": undefined,
+              "sel": undefined,
+              "text": parentVNode.text
+            })
+            parentVNode.text = undefined
+          }
+          Array.prototype.push.apply(parentVNode.children, childrenVNode)
+        }
 
         return parentVNode
       }
       else {
         // Case : the parent sinks does not have a DOM sink
-        return div(arrayVNode)
+        // To avoid putting an extra `div` when there is only one vNode
+        // we put the extra `div` only when there are several vNodes
+        return arrayVNode.length === 1 ? arrayVNode[0] : div(arrayVNode)
+        //        return div(arrayVNode)
       }
     }
   }
@@ -506,6 +533,22 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
+   * Turns a sink which is empty into a sink which emits `Null`
+   * This is necessary for use in combination with `combineLatest`
+   * As a matter of fact, `combineLatest(obs1, obs2)` will block till both
+   * observables emit at least one value. So if `obs2` is empty, it will
+   * never emit anything
+   * @param sink
+   * @returns {Observable|*}
+   */
+  function emitNullIfEmpty(sink) {
+    return $.merge(
+      sink,
+      sink.isEmpty().filter(x=>x).map(x => null)
+    )
+  }
+
+  /**
    * Merges the DOM nodes produced by a parent component with the DOM nodes
    * produced by children components, such that the parent DOM nodes
    * wrap around the children DOM nodes
@@ -518,22 +561,34 @@ function require_util(Rx, $, R, Sdom) {
    * @returns {Observable<VNode>|Null}
    */
   function mergeDOMSinksDefault(parentSinks, childrenSinks) {
-    const allSinks = flatten([parentSinks, childrenSinks])
-    const allDOMSinks = removeNullsFromArray(projectSinksOn('DOM', allSinks))
+    // We want `combineLatest` to still emit the parent DOM sink, even when
+    // one of its children sinks is empty, so we modify the children sinks
+    // to emits ONE `Null` value if it is empty
+    const childrenDOMSinksOrNull = mapR(emitNullIfEmpty, projectSinksOn('DOM', childrenSinks))
+    const parentDOMSinksOrNull = projectSinksOn('DOM', [parentSinks])
+
+    const allSinks = flatten([parentDOMSinksOrNull, childrenDOMSinksOrNull])
+    const allDOMSinks = removeNullsFromArray(allSinks)
     var parentDOMSink = parentSinks ? parentSinks.DOM : null
 
     // Edge case : none of the sinks have a DOM sink
     // That should not be possible as we come here only
     // when we detect a DOM sink
-    if (allDOMSinks.length === 0) {return null}
+    if (allDOMSinks.length === 0) {throw 'mergeDOMSinksDefault: internal' +
+    ' error!'}
 
     return $.combineLatest(allDOMSinks)
+    // TODO : modify the children sinks so that when the parent emits and
+    // the children are completed or empty, it still emits null for the children
+    // then filter that null value later
       .tap(console.log.bind(console, 'mergeDOMSinksDefault: allDOMSinks'))
       .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
   function mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName) {
     const allSinks = flatten([parentSinks, childrenSinks])
+    // TODO : add the remove null from array as in DOM default, actually add
+    // a filter(null) to all sinks!!
 
     // The edge case when none of the sinks have a non-DOM sink
     // should never happen as we come here only when we have a sink name
@@ -578,7 +633,7 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   // Testing utilities
-  const defaultTimeUnit = 50
+  const defaultTimeUnit = 20
 
   /**
    *
