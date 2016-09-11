@@ -201,7 +201,7 @@
       <file leaf-file-name="Router.specs.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="389">
+            <state relative-caret-position="446">
               <caret line="279" column="32" selection-start-line="279" selection-start-column="32" selection-end-line="279" selection-end-column="32" />
               <folding>
                 <element signature="e#898#1464#0" expanded="true" />
@@ -559,12 +559,12 @@
       <workItem from="1472780001378" duration="10137000" />
       <workItem from="1472808647850" duration="45608000" />
       <workItem from="1473058862407" duration="65340000" />
-      <workItem from="1473200801967" duration="50283000" />
+      <workItem from="1473200801967" duration="50435000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="171368000" />
+    <option name="totallyTimeSpent" value="171520000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="114" y="0" width="1166" height="800" extended-state="0" />
@@ -1854,7 +1854,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/qunit_specs/Router.specs.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="389">
+        <state relative-caret-position="446">
           <caret line="279" column="32" selection-start-line="279" selection-start-column="32" selection-end-line="279" selection-end-column="32" />
           <folding>
             <element signature="e#898#1464#0" expanded="true" />
