@@ -75,14 +75,6 @@ function require_test_utils(Rx, $, R, U) {
 
   //////
   // test execution helpers
-  function makeTestSources(aSourceNames) {
-    return reduceR((accTestSources, sourceName) => {
-      accTestSources[sourceName] = new Rx.Subject()
-      // TODO : change the factory method : could perfectly be replay or not
-      return accTestSources
-    }, {}, aSourceNames)
-  }
-
   function endOf(sourcesSimulation$) {
     return $.merge(valuesR(sourcesSimulation$)).last()
   }
@@ -388,6 +380,6 @@ function require_test_utils(Rx, $, R, U) {
 
   return {
     runTestScenario: runTestScenario,
-    makeTestSources: makeTestSources
+//    makeTestSources: makeTestSources
   }
 }

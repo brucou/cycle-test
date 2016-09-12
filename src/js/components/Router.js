@@ -247,9 +247,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
           console.log('params is null!!! no match for this component on' +
             ' this route :' + trace)
           cached$ = sinkName === 'DOM' ? $.of(null) : $.empty()
-
-          //              return $.of(nullVNode)
-          // TODO : DOC : no sink should emit null!!!
         }
 
         return cached$
@@ -273,44 +270,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     makeAllSinks: makeAllSinks
   }
 }
-
-// Use case : nested routing
-// m(Router, {route: '/:user/'}, [
-//   m(Component1, [
-//     m(Router, {route: '/:user/:id'}, [
-//       m(Component2, dotdotdot)
-//     ])
-//   ])
-// ])
-//
-// {user: 'bruno', id: 1} -> {user: 'bruno', id: 2} :
-// - Component1 sinks will not change
-// - Component2 sinks will be terminated and recreated to reflect the route change
-// {user: 'bruno', id: 1} -> {user: 'tylor', id: 1} :
-// - Component1 sinks will be terminated and recreated to reflect the route change
-// - Component2 sinks will be terminated and recreated to reflect the route change
-// {user: 'bruno', id: 1} -> {user: 'tylor', id: 2} :
-// - Component1 sinks will be terminated and recreated to reflect the route change
-// - Component2 sinks will be terminated and recreated to reflect the route change
-
-// Use case : <<De-nested>> routing
-// m(Router, {route: '/:user/'}, [
-//   m(Component1, [
-//     m(Router, {route: '/*/:id'}, [
-//       m(Component2, dotdotdot)//
-//     ])
-//   ])
-// ])
-
-// {user: 'bruno', id: 1} -> {user: 'bruno', id: 2} :
-// - Component1 sinks will not change
-// - Component2 sinks will be terminated and recreated to reflect the route change
-// {user: 'bruno', id: 1} -> {user: 'tylor', id: 1} :
-// - Component1 sinks will be terminated and recreated to reflect the route change
-// - Component2 sinks will not change
-// {user: 'bruno', id: 1} -> {user: 'tylor', id: 2} :
-// - Component1 sinks will be terminated and recreated to reflect the route change
-// - Component2 sinks will be terminated and recreated to reflect the route change
 
 // Routing parameters
 // Parameters are passed to the children via the `onRoute$` local source

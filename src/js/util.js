@@ -98,6 +98,7 @@ function require_util(Rx, $, R, Sdom) {
    */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
+    _settings = _settings || {}
     console.groupCollapsed('m - ' + _settings.trace)
     console.log('componentDef, _settings, children', componentDef, _settings, children)
     // check signature
@@ -542,10 +543,12 @@ function require_util(Rx, $, R, Sdom) {
    * @returns {Observable|*}
    */
   function emitNullIfEmpty(sink) {
-    return $.merge(
-      sink,
-      sink.isEmpty().filter(x=>x).map(x => null)
-    )
+    return isNil(sink) ?
+      null :
+      $.merge(
+        sink,
+        sink.isEmpty().filter(x=>x).map(x => null)
+      )
   }
 
   /**
@@ -574,21 +577,18 @@ function require_util(Rx, $, R, Sdom) {
     // Edge case : none of the sinks have a DOM sink
     // That should not be possible as we come here only
     // when we detect a DOM sink
-    if (allDOMSinks.length === 0) {throw 'mergeDOMSinksDefault: internal' +
-    ' error!'}
+    if (allDOMSinks.length === 0) {
+      throw 'mergeDOMSinksDefault: internal' +
+      ' error!'
+    }
 
     return $.combineLatest(allDOMSinks)
-    // TODO : modify the children sinks so that when the parent emits and
-    // the children are completed or empty, it still emits null for the children
-    // then filter that null value later
       .tap(console.log.bind(console, 'mergeDOMSinksDefault: allDOMSinks'))
       .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
   function mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName) {
     const allSinks = flatten([parentSinks, childrenSinks])
-    // TODO : add the remove null from array as in DOM default, actually add
-    // a filter(null) to all sinks!!
 
     // The edge case when none of the sinks have a non-DOM sink
     // should never happen as we come here only when we have a sink name

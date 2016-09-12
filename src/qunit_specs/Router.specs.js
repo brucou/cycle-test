@@ -13,10 +13,6 @@ define(function (require) {
   const tutils = require('test_util')
   const runTestScenario = tutils.runTestScenario
   const m = U.m
-  const mapR = R.map
-  const reduceR = R.reduce
-  const makeTestSources = tutils.makeTestSources
-  const projectSinksOn = U.projectSinksOn
 
   // TODO : move to const.js file ?
   const nullVNode = {
@@ -30,7 +26,7 @@ define(function (require) {
 
   QUnit.module("Testing Router component", {})
 
-  QUnit.skip("main cases - non-nested routing", function exec_test(assert) {
+  QUnit.test("main cases - non-nested routing", function exec_test(assert) {
     let done = assert.async(4)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -97,6 +93,7 @@ define(function (require) {
     }
 
     const vNodes = [
+      null, // starts with null
       div([
         makeVNode(1, 1, 'b'),
         makeVNode(2, 1, 'b'),
@@ -105,6 +102,8 @@ define(function (require) {
         makeVNode(1, 1, 'b'),
         makeVNode(2, 1, 'c'),
       ]),
+      null, // a. -> b. : from match to no match
+      null, // c. : starts with null
       div([
         makeVNode(1, 2, 'd'),
         makeVNode(2, 2, 'e'),
@@ -113,6 +112,7 @@ define(function (require) {
         makeVNode(1, 2, 'd'),
         makeVNode(2, 2, 'f'),
       ]),
+      null, // f. : starts with null
       div([
         makeVNode(1, 3, 'e'),
         makeVNode(2, 3, 'a'),
@@ -121,6 +121,7 @@ define(function (require) {
         makeVNode(1, 3, 'e'),
         makeVNode(2, 3, 'b'),
       ]),
+      null, // paul -> from match to no match
     ]
 
     /** @type TestResults */
@@ -178,8 +179,8 @@ define(function (require) {
     const testFn = mComponent
 
     runTestScenario(inputs, expected, testFn, {
-      tickDuration: 10,
-      waitForFinishDelay: 100
+      tickDuration: 5,
+      waitForFinishDelay: 30
     })
 
   })
@@ -294,25 +295,16 @@ define(function (require) {
     // the children, so only need to use it once, but what if we need a
     // different sinknames at a lower level?? should be fine but better test
     console.groupCollapsed('creating mComponent')
-    const mComponent = m(Router,
-      {
-        route: ':user',
-        sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$'],
-        trace: 'top'
-      },
-      [
-        m(childComponent, {trace: 'middle'}, [
-          m(Router, {route: ':id', trace: 'bottom'}, [greatChildComponent])
-        ])
+    const mComponent = m(Router, {
+      route: ':user',
+      sinkNames: ['DOM', 'routeLog', 'userAction1$', 'userAction2$'],
+      trace: 'top'
+    }, [
+      m(childComponent, {trace: 'middle'}, [
+        m(Router, {route: ':id', trace: 'bottom'}, [greatChildComponent])
       ])
+    ])
     console.groupEnd('creating mComponent')
-
-    // sources : route$, DOM1, DOM2, userAction$
-    // greatChildComponent : routeLog <- route, settings; DOM <- DOM2,
-    // userAction2$ <- userAction$,
-    // notMerged (dont put in sinkNames, to check that it is not merged)
-    // childComponent : routeLog <- route, settings; DOM <- DOM1,
-    // userAction1$ <- userAction$
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
@@ -498,11 +490,289 @@ define(function (require) {
 
     runTestScenario(inputs, expected, testFn, {
       tickDuration: 5,
-      waitForFinishDelay: 100
+      waitForFinishDelay: 30
     })
 
     assert.equal(true, true, 'sinks whose name is not present in sinkNames' +
       ' are not merged')
+
+  })
+
+  QUnit.test("edge cases - non-nested routing - empty DOM sink", function exec_test(assert) {
+    let done = assert.async(4)
+
+    const childComponent1 = function childComponent1(sources, settings) {
+      return {
+        DOM: sources.DOM1.take(4)
+          .tap(console.warn.bind(console, 'DOM : component 1: '))
+          .map(x => h('span', {},
+            'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
+          .concat($.never()),
+        routeLog: sources.route$
+          .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
+          .map(x => 'Component 1 - routeLog - ' +
+          settings.routeParams.user + settings.routeParams.id),
+        a: sources.userAction$.map(x => 'Component1 - user action - ' + x)
+      }
+    }
+    const childComponent2 = function childComponent1(sources, settings) {
+      return {
+        DOM: $.empty(),
+        routeLog: sources.route$
+          .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
+          .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
+        b: sources.userAction$.map(x => 'Component2 - user action - ' + x)
+      }
+    }
+
+    const mComponent = m(Router,
+      {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
+      [childComponent1, childComponent2])
+
+    const inputs = [
+      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d-e-f-'}},
+      {
+        userAction$: {
+          diagram: 'a---b-ac--ab---c',
+          values: {a: 'click', b: 'select', c: 'hover',}
+        }
+      },
+      {
+        route$: {
+          //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
+          //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
+          diagram: '-a---b--cdef--g', values: {
+            a: 'bruno/1',
+            b: 'ted',
+            c: 'bruno/2',
+            d: 'bruno/2/remainder',
+            e: 'bruno/2/remainder',
+            f: 'bruno/3/bigger/remainder',
+            g: 'paul',
+          }
+        }
+      }
+    ]
+
+    function makeVNode(componentNum, id, x) {
+      return h('span', {},
+        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+    }
+
+    const vNodes = [
+      null, // starts with null
+      div([
+        makeVNode(1, 1, 'b'),
+      ]),
+      null, // a. -> b. : from match to no match
+      null, // c. : starts with null
+      div([
+        makeVNode(1, 2, 'd'),
+      ]),
+      null, // f. : starts with null
+      div([
+        makeVNode(1, 3, 'e'),
+      ]),
+      null, // paul -> from match to no match
+    ]
+
+    /** @type TestResults */
+    const expected = {
+      DOM: {
+        outputs: vNodes,
+        successMessage: 'sink DOM produces the expected values :' +
+        ' <div>non-empty children content<\div>',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      routeLog: {
+        outputs: [
+          "Component 1 - routeLog - bruno1",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
+          "Component 1 - routeLog - bruno3",
+          "Component2 - routeLog - routeRemainder: bigger/remainder"
+        ],
+        successMessage: 'sink routeLog produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      a: {
+        outputs: [
+          "Component1 - user action - select",
+          "Component1 - user action - click",
+          "Component1 - user action - select"
+        ],
+        successMessage: 'sink a produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      b: {
+        outputs: [
+          "Component2 - user action - select",
+          "Component2 - user action - click",
+          "Component2 - user action - select"
+        ],
+        successMessage: 'sink b produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+    }
+
+    function analyzeTestResults(actual, expected, message) {
+      assert.deepEqual(actual, expected, message)
+      done()
+    }
+
+    const testFn = mComponent
+
+    runTestScenario(inputs, expected, testFn, {
+      tickDuration: 10,
+      waitForFinishDelay: 100
+    })
+
+  })
+
+  QUnit.test("edge cases - non-nested routing - 1 child with null DOM sink," +
+    " 1 with non-null DOM sink", function exec_test(assert) {
+    let done = assert.async(4)
+
+    const childComponent1 = function childComponent1(sources, settings) {
+      return {
+        DOM: sources.DOM1.take(4)
+          .tap(console.warn.bind(console, 'DOM : component 1: '))
+          .map(x => h('span', {},
+            'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
+          .concat($.never()),
+        routeLog: sources.route$
+          .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
+          .map(x => 'Component 1 - routeLog - ' +
+          settings.routeParams.user + settings.routeParams.id),
+        a: sources.userAction$.map(x => 'Component1 - user action - ' + x)
+      }
+    }
+    const childComponent2 = function childComponent1(sources, settings) {
+      return {
+        DOM: null,
+        routeLog: sources.route$
+          .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
+          .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
+        b: sources.userAction$.map(x => 'Component2 - user action - ' + x)
+      }
+    }
+
+    const mComponent = m(Router,
+      {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
+      [childComponent1, childComponent2])
+
+    const inputs = [
+      {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d-e-f-'}},
+      {
+        userAction$: {
+          diagram: 'a---b-ac--ab---c',
+          values: {a: 'click', b: 'select', c: 'hover',}
+        }
+      },
+      {
+        route$: {
+          //diagr: '-a--b--c--d--e--f--a--b--c--d--e--f-',
+          //diagr: '-a-b-c-d-e-f-abb-c-d-e-f-',
+          diagram: '-a---b--cdef--g', values: {
+            a: 'bruno/1',
+            b: 'ted',
+            c: 'bruno/2',
+            d: 'bruno/2/remainder',
+            e: 'bruno/2/remainder',
+            f: 'bruno/3/bigger/remainder',
+            g: 'paul',
+          }
+        }
+      }
+    ]
+
+    function makeVNode(componentNum, id, x) {
+      return h('span', {},
+        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+    }
+
+    const vNodes = [
+      null, // starts with null
+        makeVNode(1, 1, 'b'),
+      null, // a. -> b. : from match to no match
+      null, // c. : starts with null
+        makeVNode(1, 2, 'd'),
+      null, // f. : starts with null
+        makeVNode(1, 3, 'e'),
+      null, // paul -> from match to no match
+    ]
+
+    /** @type TestResults */
+    const expected = {
+      DOM: {
+        outputs: vNodes,
+        successMessage: 'sink DOM produces the expected values : non-null' +
+        ' child content are not wrapped into a div if there are no more than' +
+        ' 1 child',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      routeLog: {
+        outputs: [
+          "Component 1 - routeLog - bruno1",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: undefined",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
+          "Component 1 - routeLog - bruno2",
+          "Component2 - routeLog - routeRemainder: remainder",
+          "Component 1 - routeLog - bruno3",
+          "Component2 - routeLog - routeRemainder: bigger/remainder"
+        ],
+        successMessage: 'sink routeLog produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      a: {
+        outputs: [
+          "Component1 - user action - select",
+          "Component1 - user action - click",
+          "Component1 - user action - select"
+        ],
+        successMessage: 'sink a produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      b: {
+        outputs: [
+          "Component2 - user action - select",
+          "Component2 - user action - click",
+          "Component2 - user action - select"
+        ],
+        successMessage: 'sink b produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+    }
+
+    function analyzeTestResults(actual, expected, message) {
+      assert.deepEqual(actual, expected, message)
+      done()
+    }
+
+    const testFn = mComponent
+
+    runTestScenario(inputs, expected, testFn, {
+      tickDuration: 5,
+      waitForFinishDelay: 30
+    })
 
   })
 

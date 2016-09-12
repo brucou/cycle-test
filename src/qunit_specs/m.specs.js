@@ -14,7 +14,6 @@ define(function (require) {
   const mapR = R.map
   const reduceR = R.reduce
   const always = R.always
-  const makeTestSources = tutils.makeTestSources
   const projectSinksOn = U.projectSinksOn
   const makeDivVNode = U.makeDivVNode
 
@@ -92,8 +91,6 @@ define(function (require) {
       const mComponent = m({
         makeLocalSettings: settings => ({local: 'local setting'}),
       }, testSettings, [childComponent1, childComponent2])
-
-      const testSources = makeTestSources(['DOM', 'a', 'b', 'c', 'd', 'e'])
 
       const inputs = [
         {a: {diagram: 'ab|', values: {a: 'a-0', b: 'a-1'}}},
@@ -355,8 +352,6 @@ define(function (require) {
         sinksContract: function checkMSinksContracts() {return true}
 
       }, testSettings, [childComponent1, childComponent2])
-
-      const testSources = makeTestSources(['DOM', 'auth$', 'a', 'b', 'c', 'd', 'e'])
 
       const vNodes = [
         div('.parent', [
@@ -648,29 +643,53 @@ define(function (require) {
         return {
           "children": [
             {
+              "children": [],
+              "data": {},
+              "elm": undefined,
+              "key": undefined,
+              "sel": undefined,
+              "text": p
+            },
+            {
               "children": [
                 {
                   "children": [],
                   "data": {},
                   "elm": undefined,
                   "key": undefined,
+                  "sel": undefined,
+                  "text": c
+                },
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "data": {},
+                      "elm": undefined,
+                      "key": undefined,
+                      "sel": undefined,
+                      "text": gc
+                    },
+                  ],
+                  "data": {},
+                  "elm": undefined,
+                  "key": undefined,
                   "sel": "div",
-                  "text": gc
+                  "text": undefined
                 }
-
               ],
               "data": {},
               "elm": undefined,
               "key": undefined,
               "sel": "div",
-              "text": c
+              "text": undefined
             }
           ],
           "data": {},
           "elm": undefined,
           "key": undefined,
           "sel": "div",
-          "text": p
+          "text": undefined
         }
       }
 

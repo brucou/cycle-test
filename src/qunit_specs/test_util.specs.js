@@ -7,7 +7,7 @@ define(function (require) {
 
   QUnit.module("Testing runTestScenario helper", {});
 
-  QUnit.skip("runTestScenario(testSources, testCase, testFn, settings) :" +
+  QUnit.test("runTestScenario(testSources, testCase, testFn, settings) :" +
     " Main case",
     function exec_test(assert) {
       let done = assert.async(3)
@@ -17,36 +17,30 @@ define(function (require) {
         done()
       }
 
-      const testSources = {
-        a: new Rx.ReplaySubject(1),
-        b: new Rx.ReplaySubject(1),
-      }
+      const inputs = [
+        {a: {diagram: 'xy|', values: {x: 'a-0', y: 'a-1'}}},
+        {b: {diagram: 'xyz|', values: {x: 'b-0', y: 'b-1', z: 'b-2'}}}
+      ]
 
       /** @type TestResults */
       const testCase = {
-        inputs: {
-          a: {diagram: 'xy|', values: {x: 'a-0', y: 'a-1'}},
-          b: {diagram: 'xyz|', values: {x: 'b-0', y: 'b-1', z: 'b-2'}},
+        m: {
+          outputs: ['m-a-0', 'm-b-0', 'm-a-1', 'm-b-1', 'm-b-2'],
+          successMessage: 'sink m produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
         },
-        expected: {
-          m: {
-            outputs: ['m-a-0', 'm-b-0', 'm-a-1', 'm-b-1', 'm-b-2'],
-            successMessage: 'sink m produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          n: {
-            outputs: ['t-n-a-0', 't-n-a-1'],
-            successMessage: 'sink n produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: x => 't-' + x,
-          },
-          o: {
-            outputs: ['o-b-0', 'o-b-1', 'o-b-2'],
-            successMessage: 'sink o produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          }
+        n: {
+          outputs: ['t-n-a-0', 't-n-a-1'],
+          successMessage: 'sink n produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: x => 't-' + x,
+        },
+        o: {
+          outputs: ['o-b-0', 'o-b-1', 'o-b-2'],
+          successMessage: 'sink o produces the expected values',
+          analyzeTestResults: analyzeTestResults,
+          transformFn: undefined,
         }
       }
 
@@ -56,7 +50,7 @@ define(function (require) {
         o: sources.b.delay(3).map(x => 'o-' + x)
       })
 
-      runTestScenario(testSources, testCase, testFn, {
+      runTestScenario(inputs, testCase, testFn, {
         timeUnit: 10,
         waitForFinishDelay: 30
       })
