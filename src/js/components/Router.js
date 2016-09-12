@@ -196,42 +196,71 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       })
       .share()
 
+    function makeRoutedSinkFromCache(sinkName) {
+      return function makeRoutedSinkFromCache(params, cachedSinks) {
+        var cached$, preCached$, prefix$
+
+        if (params != null) {
+          // Case : new route matches component configured route
+          if (cachedSinks[sinkName] != null) {
+            // Case : the component produces a sink with that name
+            // This is an important case, as parent can have children
+            // nested at arbitrary levels, with either :
+            // 1. sinks which will not be retained (not in `sinkNames`
+            // settings)
+            // 2. or no sinks matching a particular `sinkNames`
+            // Casuistic 1. is taken care of automatically as we only
+            // construct the sinks in `sinkNames`
+            // Casuistic 2. is taken care of thereafter
+
+            prefix$ = sinkName === 'DOM' ?
+              // Case : DOM sink
+              // actually any sink which is merged with a `combineLatest`
+              // but here by default only DOM sinks are merged that way
+              // Because the `combineLatest` blocks till all its sources
+              // have started, and that behaviour interacts badly with
+              // route changes desired behavior, we forcibly emits a `null`
+              // value at the beginning of every sink.
+              $.of(null) :
+              // Case : Non-DOM sink
+              // Non-DOM sinks are merged with a simple `merge`, there
+              // is no conflict here, so we just return nothing
+              $.empty()
+
+            preCached$ = cachedSinks[sinkName]
+              .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
+              .finally(_ => {
+                console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
+                  ' route change')
+              })
+
+            cached$ = $.concat(prefix$, preCached$)
+          }
+          else {
+            // Case : the component does not have any sinks with the
+            // corresponding sinkName
+            cached$ = $.empty()
+          }
+        }
+        else {
+          // Case : new route does NOT match component configured route
+          console.log('params is null!!! no match for this component on' +
+            ' this route :' + trace)
+          cached$ = sinkName === 'DOM' ? $.of(null) : $.empty()
+
+          //              return $.of(nullVNode)
+          // TODO : DOC : no sink should emit null!!!
+        }
+
+        return cached$
+      }
+    }
+
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: changedRouteEvents$.withLatestFrom(cachedSinks$,
-          (params, cachedSinks) => {
-            var cached$, preCached$, prefix$
-
-            if (params != null) {
-              if (cachedSinks[sinkName] != null) {
-                prefix$ = sinkName === 'DOM' ?
-                  // actually any sink which is merged with a `combineLatest`
-                  // but here by default only DOM sinks are merged that way
-                  $.of(null) : $.empty()
-                preCached$ = cachedSinks[sinkName]
-                  .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
-                  .finally(_ => {
-                    console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
-                      ' route change')
-                  })
-                cached$ = $.concat(prefix$, preCached$)
-              } else {
-                //                $.of('no sink '+sinkName)
-                cached$ = $.empty()
-              }
-            }
-            else {
-              // new route does not match component route
-              console.log('params is null!!! no match for this component on' +
-                ' this route :' + trace)
-              cached$ = sinkName === 'DOM' ? $.of(null) : $.empty()
-
-              //              return $.of(nullVNode)
-              // TODO : DOC : no sink should emit null!!!
-            }
-
-            return cached$
-          }
+        [sinkName]: changedRouteEvents$.withLatestFrom(
+          cachedSinks$,
+          makeRoutedSinkFromCache(sinkName)
         ).switch()
       }
     }

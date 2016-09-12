@@ -389,26 +389,6 @@ define(function (require) {
       }
     }
 
-    const expectedUserAction1 = [
-      null, // null because children sinks starts with null
-      "child component - starting",
-      "child component - user action - select",
-      null, // null because children sinks starts with null
-      "child component - starting",
-      "child component - user action - click",
-      "child component - user action - hover",
-      null, // null because children sinks starts with null
-      "child component - starting",
-      "child component - user action - click",
-      "child component - user action - select",
-      "child component - user action - click",
-      "child component - user action - hover",
-      null, // match -> no match
-      null, // null because children sinks starts with null
-      "child component - starting",
-      null, // match -> no match
-    ]
-
     const expectedVNodes = [
       null,
       makeVNode('bruno', 1, 'b', 'b'),
@@ -434,39 +414,51 @@ define(function (require) {
     ]
 
     const expectedRouteLog = [
-      null, // all children sinks start with null
       "Child component 1 - routeLog - bruno",
-      null, // null because all children sinks start with null
-      "great child component - routeLog - (user: undefined, id: 1)",
-      null, // null because all children sinks start with null
-      "Child component 1 - routeLog - ted",
-      null, // null because all children sinks start with null
       "great child component - routeLog - (user: undefined, id: 1)",
       "Child component 1 - routeLog - ted",
-      null, // null because of transition child id=1 -> no matching
-      null, // null because all children sinks start with null
-      "Child component 1 - routeLog - bruno",
-      null, // null because all children sinks start with null
-      "great child component - routeLog - (user: undefined, id: 2)",
+      "great child component - routeLog - (user: undefined, id: 1)",
+      "Child component 1 - routeLog - ted",
       "Child component 1 - routeLog - bruno",
       "great child component - routeLog - (user: undefined, id: 2)",
       "Child component 1 - routeLog - bruno",
       "great child component - routeLog - (user: undefined, id: 2)",
       "Child component 1 - routeLog - bruno",
-      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 2)",
+      "Child component 1 - routeLog - bruno",
       "great child component - routeLog - (user: undefined, id: 3)",
-      null, // null because all children sinks start with null
       "Child component 1 - routeLog - ",
-      // null because of transition matching -> no matching (child)
-      null,
-      // null because of transition matching -> no matching (parent)
-      // reminder : route changed to undefined
-      null,
-      null, // null because all children sinks start with null
       "Child component 1 - routeLog - ted",
-      null, // null because all children sinks start with null
       "great child component - routeLog - (user: undefined, id: 1)",
-      null, // null because of transition matching -> no matching (parent)
+    ]
+
+    const expectedUserAction1 = [
+      "child component - starting", // nil -> 'bruno'
+      "child component - user action - select",
+      "child component - starting", // 'bruno' -> 'ted'
+      "child component - user action - click",
+      "child component - user action - hover",
+      "child component - user action - click",
+      "child component - starting", // 'ted' -> 'bruno'
+      "child component - user action - select",
+      "child component - user action - click",
+      "child component - user action - hover",
+      "child component - starting", // bruno -> ''
+      "child component - starting", // undefined -> 'ted'
+    ]
+
+    const expectedUserAction2 = [
+      "great child component - starting", // nil -> bruno/1
+      "great child component - user action - select",
+      "great child component - starting", // bruno/1 -> ted/1
+      "great child component - user action - click",
+      "great child component - user action - hover",
+      "great child component - starting",
+      "great child component - user action - select",
+      "great child component - user action - click",
+      "great child component - user action - hover",
+      "great child component - starting", // g
+      "great child component - starting", // j
     ]
 
     /** @type TestResults */
@@ -490,15 +482,7 @@ define(function (require) {
         transformFn: undefined,
       },
       userAction2$: {
-        outputs: [
-          "great child component - starting",
-          "great child component - user action - select",
-          "great child component - starting",
-          "great child component - user action - click",
-          "great child component - user action - select",
-          "great child component - starting",
-          "great child component - user action - click"
-        ],
+        outputs: expectedUserAction2,
         successMessage: 'sink userAction2$ produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
