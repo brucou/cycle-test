@@ -152,8 +152,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       .share()
     // Note : must be shared, used twice here
 
-    //    let cachedSinksS = new Rx.Subject
-
     // I had tested with executing the `m` helper as many times as sources,
     // and it seems to work. It is however inefficient as this means
     // computing unnecessarily the whole component tree under the current
@@ -169,7 +167,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     // destination sinks
     // Sinks who no longer match a given route are terminated with
     // `takeUntil`.
-    const cachedSinksS = changedRouteEvents$
+    const cachedSinks$ = changedRouteEvents$
       .map(function (params) {
         let cachedSinks
 
@@ -207,30 +205,26 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
 
     function makeRoutedSink(sinkName) {
       return {
-        [sinkName]: changedRouteEvents$.withLatestFrom(cachedSinksS,
+        [sinkName]: changedRouteEvents$.withLatestFrom(cachedSinks$,
           (params, cachedSinks) => {
             if (params != null) {
               return cachedSinks[sinkName] != null ?
-                $.concat(cachedSinks[sinkName]
+                cachedSinks[sinkName]
                   .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
                   .finally(_ => {
                     console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
                       ' route change')
                   })
-                  //.takeUntil(changedRouteEvents$)
-                  ,
-                  $.of(null).tap(x=>console.error('EEEEEEE'))
-            )
-//                  .filter(complement(isNil))
-//                  .startWith(null)
+                  .startWith(null)
                 :
-                $.of(null)
+                $.empty()
             }
             else {
               // new route does not match component route
               console.log('params is null!!! no match for this component on' +
                 ' this route')
-              return $.of(null) // TODO : DOC : no sink should emit null!!!
+              return $.of(null)
+              // TODO : DOC : no sink should emit null!!!
             }
           }
         ).switch()
@@ -245,37 +239,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     makeAllSinks: makeAllSinks
   }
 }
-
-// test
-// 1. non-nested routing x components x (matches 1/no matches/matches
-// 2/matches 3)
-// Inputs :
-// - userAction$ : '-a---b-cd---e'
-// - route$ : /bruno/1, /ted, /bruno/2, bruno/3
-//   i.e. 'a----b-bc---d'
-// - route : '/:user/:id'
-// - components :
-//   -> {DOM : $.interval(100).take(2).map(x => h('span', {}, 'Component 1 :' +
-// settings.routeParams.id + ' - ' + x))}
-//   -> {DOM : $.interval(100).map(x => h('span', {}, 'Component 2 :' + x))}
-//   also :
-//   component 1 and 2 : routeLog : sources.route$.map(x => 'Component2 -
-// routeLog ' + x
-//   component 2 : a : sources.userAction$.map(x => 'Component2 - user action '
-// + x)
-// Expected :
-//
-// m(Router, {route: '/:user/:id', header : '!'}, [
-//   Component1,
-//   Component2
-// ])
-
-// All the children components below the Router component will be :
-// - activated when the `route` setting matches the incoming route
-// - terminated when the `route` setting does not match the incoming route
-// - reactivated when the incoming route has changed but still matches
-//   That's the case for example with :
-//     {user: 'bruno', id: 1} -> {user: 'bruno', id: 2}
 
 // Use case : nested routing
 // m(Router, {route: '/:user/'}, [

@@ -18,8 +18,6 @@ define(function (require) {
   const makeTestSources = tutils.makeTestSources
   const projectSinksOn = U.projectSinksOn
 
-  s = Sdom2html
-
   QUnit.module("Testing Router component", {})
 
   QUnit.skip("main cases - non-nested routing", function exec_test(assert) {
@@ -176,14 +174,56 @@ define(function (require) {
 
   })
 
-  // m(Router, {route: '/:user/'}, [
-  //   m(Component1, [
-  //     m(Router, {route: '/:id'}, [
-  //       Component2
-  //     ])
-  //   ])
-  // ])
-
+  /**
+  // Note that `:user` matches the empty string! It is somewhat of a
+  // pathological case but important to have in mind.
+  //
+  // We have 6 transitions to test against :
+  //   A    | child  |  n          B    | child  |  n
+  //-------------------------    ------------------------
+  // parent |   o    |  1        parent |   1    |  o
+  // n      |   x    |  2        n      |   x    |  2
+  //
+  //   C    | child  |  n
+  //-------------------------
+  // parent |   1    |  2
+  // n      |   x    |  o
+  //
+  // Legend:
+  // - (n,n) : the streamed route does not match any of the configured route
+  // - (parent, child) : the streamed route match the parent, and the
+  // nested child configured route
+  // - (parent, n) | (child, n) : the streamed route matches only one of
+  // parent or child configured route
+  // - x : state which is not possible
+  //
+  // Transition A -> A1:
+  // The parent sink emits immediately a value which is the last seen
+  // value of the parent sink (i.e. as if children sinks became null) if any
+  // Transition A -> A2:
+  // All children and parent sinks are terminated. Nothing is emitted,
+  //
+  // Transition B -> B1:
+  // Nothing is visibly emitted on any sinks (actually null is emitted at
+  // children's level but filtered out), but children sinks are activated.
+  // Whenever a child sink will emit a value, that value will be merged
+  // into the parent sinks
+  //
+  // Transition B -> B2:
+  // Nothing is emitted on the parent sinks, which are terminated.
+  //
+  // Transition C -> C1:
+  // Parent and children sinks are activated and combined. The current
+  // logic is hierarchical :
+  // - if the parent sinks emit first, then that value is passed
+  // - if the children sinks emit first, then till the parent value emit
+  // its first value, nothing is passed (à la `combineLatest`)
+  // Starting the top level parent sink will emit a null.
+  //
+  // Transition C -> C2:
+  // Parent sinks are activated.
+  // Starting the top level parent sink will emit a null.
+   */
   QUnit.test("main cases - nested routing", function exec_test(assert) {
     let done = assert.async(4)
     let counter = 0
@@ -278,22 +318,21 @@ define(function (require) {
           //userA: 'a---b-ac--aba--c',
           //diagr: '-a--b--c--d--e--f--a--b--c--d-'}},
           //diagr: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
-          diagram: '-a---b--cdef--g-h-', values: {
+          diagram: '-a--b--c--def--g-h-i-j-i', values: {
             a: 'bruno/1',
-            b: 'ted',
-            c: 'bruno/2',
-            d: 'bruno/2/remainder',
+            b: 'ted/1',
+            c: 'ted',
+            d: 'bruno/2',
             e: 'bruno/2/remainder',
-            f: 'bruno/3/bigger/remainder',
-            g: '',
-            h: undefined,
+            f: 'bruno/2/remainder',
+            g: 'bruno/3/bigger/remainder',
+            h: '',
+            i: undefined,
+            j: 'ted/1/sth',
           }
         }
       }
     ]
-    //TODO : add a ted/1 after bruno/1 to test that even if the children route
-    // is the same it still redraws because the parent has changed
-    // TODO : also after undefined, put again some sources
 
     function makeVNode(user, id, x, y) {
       return y != null ? {
@@ -340,14 +379,26 @@ define(function (require) {
     }
 
     const vNodes = [
+      null,
       makeVNode('bruno', 1, 'b', 'b'),
-      makeVNode('bruno', 1, 'b', 'c'),
-      makeVNode('ted', 1, 'c', null),
-      makeVNode('bruno', 2, 'd', 'e'),
-      makeVNode('bruno', 2, 'd', 'f'),
-      makeVNode('bruno', 3, 'e', null),
-      makeVNode('bruno', 3, 'e', 'a'),
-      makeVNode('', 3, 'f', null),
+      null,
+      makeVNode('ted', 1, 'c', 'c'),
+      makeVNode('ted', 1, 'c', 'd'),
+      makeVNode('ted', 0, 'c', null),
+      makeVNode('ted', 0, 'd', null),
+      null,
+      makeVNode('bruno', 2, 'e', 'f'),
+      makeVNode('bruno', 2, 'e', 'a'),
+      makeVNode('bruno', 2, 'e', 'b'),
+      makeVNode('bruno', 0, 'e', null),
+      makeVNode('bruno', 0, 'f', null),
+      makeVNode('bruno', 3, 'f', 'c'),
+      null,
+      makeVNode('', 0, 'a', null),
+      null, // null caused by stop
+      null, // null cause by restart
+      makeVNode('ted', 1, 'b', null),
+      makeVNode('ted', 1, 'b', 'f'),
       null
     ]
 
