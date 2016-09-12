@@ -98,7 +98,7 @@ function require_util(Rx, $, R, Sdom) {
    */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
-    console.group('m - ' + _settings.trace)
+    console.groupCollapsed('m - ' + _settings.trace)
     console.log('componentDef, _settings, children', componentDef, _settings, children)
     // check signature
     const mSignature = [

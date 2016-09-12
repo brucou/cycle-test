@@ -1,5 +1,4 @@
 /**
- * Specifications:
  * Usage : m(Router, {route: RouteSpec, sinkNames: [...]}, [children
  * components])
  */
@@ -44,6 +43,15 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const pathR = R.path
   const complement = R.complement
   const prepend = R.prepend
+
+  const nullVNode = {
+    "children": undefined,
+    "data": undefined,
+    "elm": undefined,
+    "key": undefined,
+    "sel": undefined,
+    "text": undefined
+  }
 
   // Configuration
   const routeSourceName = 'route$'
@@ -112,7 +120,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * @param {Array<Component>} childrenComponents
    */
   function makeAllSinks(sources, settings, childrenComponents) {
-    console.group('makeAllSinks')
+    console.groupCollapsed('makeAllSinks')
     console.log('sources, settings, childrenComponents', sources, settings, childrenComponents);
 
     const signature = [{settings: isRouteSettings},]
@@ -152,21 +160,6 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       .share()
     // Note : must be shared, used twice here
 
-    // I had tested with executing the `m` helper as many times as sources,
-    // and it seems to work. It is however inefficient as this means
-    // computing unnecessarily the whole component tree under the current
-    // component node. And that for every component...
-    // A naive cache solution gives very close results but shows
-    // synchronization problem that could not be solved (cache is reset
-    // too late or too early).
-    // The current solution consists in using a subject for caching, and
-    // wiring that subject so that its flow executed before the others, so
-    // its cache value is available before it is being needed.
-    // Then dependent flows are forcibly synchronised and combined with
-    // `zip` from which the cached sinks are distributed into their
-    // destination sinks
-    // Sinks who no longer match a given route are terminated with
-    // `takeUntil`.
     const cachedSinks$ = changedRouteEvents$
       .map(function (params) {
         let cachedSinks
@@ -207,25 +200,37 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
       return {
         [sinkName]: changedRouteEvents$.withLatestFrom(cachedSinks$,
           (params, cachedSinks) => {
+            var cached$, preCached$, prefix$
+
             if (params != null) {
-              return cachedSinks[sinkName] != null ?
-                cachedSinks[sinkName]
+              if (cachedSinks[sinkName] != null) {
+                prefix$ = sinkName === 'DOM' ?
+                  // actually any sink which is merged with a `combineLatest`
+                  // but here by default only DOM sinks are merged that way
+                  $.of(null) : $.empty()
+                preCached$ = cachedSinks[sinkName]
                   .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
                   .finally(_ => {
                     console.log(trace + ' : sink ' + sinkName + ': terminating due to' +
                       ' route change')
                   })
-                  .startWith(null)
-                :
-                $.empty()
+                cached$ = $.concat(prefix$, preCached$)
+              } else {
+                //                $.of('no sink '+sinkName)
+                cached$ = $.empty()
+              }
             }
             else {
               // new route does not match component route
               console.log('params is null!!! no match for this component on' +
-                ' this route')
-              return $.of(null)
+                ' this route :' + trace)
+              cached$ = sinkName === 'DOM' ? $.of(null) : $.empty()
+
+              //              return $.of(nullVNode)
               // TODO : DOC : no sink should emit null!!!
             }
+
+            return cached$
           }
         ).switch()
       }

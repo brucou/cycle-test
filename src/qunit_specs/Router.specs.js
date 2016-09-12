@@ -18,6 +18,16 @@ define(function (require) {
   const makeTestSources = tutils.makeTestSources
   const projectSinksOn = U.projectSinksOn
 
+  // TODO : move to const.js file ?
+  const nullVNode = {
+    "children": undefined,
+    "data": undefined,
+    "elm": undefined,
+    "key": undefined,
+    "sel": undefined,
+    "text": undefined
+  }
+
   QUnit.module("Testing Router component", {})
 
   QUnit.skip("main cases - non-nested routing", function exec_test(assert) {
@@ -175,54 +185,54 @@ define(function (require) {
   })
 
   /**
-  // Note that `:user` matches the empty string! It is somewhat of a
-  // pathological case but important to have in mind.
-  //
-  // We have 6 transitions to test against :
-  //   A    | child  |  n          B    | child  |  n
-  //-------------------------    ------------------------
-  // parent |   o    |  1        parent |   1    |  o
-  // n      |   x    |  2        n      |   x    |  2
-  //
-  //   C    | child  |  n
-  //-------------------------
-  // parent |   1    |  2
-  // n      |   x    |  o
-  //
-  // Legend:
-  // - (n,n) : the streamed route does not match any of the configured route
-  // - (parent, child) : the streamed route match the parent, and the
-  // nested child configured route
-  // - (parent, n) | (child, n) : the streamed route matches only one of
-  // parent or child configured route
-  // - x : state which is not possible
-  //
-  // Transition A -> A1:
-  // The parent sink emits immediately a value which is the last seen
-  // value of the parent sink (i.e. as if children sinks became null) if any
-  // Transition A -> A2:
-  // All children and parent sinks are terminated. Nothing is emitted,
-  //
-  // Transition B -> B1:
-  // Nothing is visibly emitted on any sinks (actually null is emitted at
-  // children's level but filtered out), but children sinks are activated.
-  // Whenever a child sink will emit a value, that value will be merged
-  // into the parent sinks
-  //
-  // Transition B -> B2:
-  // Nothing is emitted on the parent sinks, which are terminated.
-  //
-  // Transition C -> C1:
-  // Parent and children sinks are activated and combined. The current
-  // logic is hierarchical :
-  // - if the parent sinks emit first, then that value is passed
-  // - if the children sinks emit first, then till the parent value emit
-  // its first value, nothing is passed (à la `combineLatest`)
-  // Starting the top level parent sink will emit a null.
-  //
-  // Transition C -> C2:
-  // Parent sinks are activated.
-  // Starting the top level parent sink will emit a null.
+   // Note that `:user` matches the empty string! It is somewhat of a
+   // pathological case but important to have in mind.
+   //
+   // We have 6 transitions to test against :
+   //   A    | child  |  n          B    | child  |  n
+   //-------------------------    ------------------------
+   // parent |   o    |  1        parent |   1    |  o
+   // n      |   x    |  2        n      |   x    |  2
+   //
+   //   C    | child  |  n
+   //-------------------------
+   // parent |   1    |  2
+   // n      |   x    |  o
+   //
+   // Legend:
+   // - (n,n) : the streamed route does not match any of the configured route
+   // - (parent, child) : the streamed route match the parent, and the
+   // nested child configured route
+   // - (parent, n) | (child, n) : the streamed route matches only one of
+   // parent or child configured route
+   // - x : state which is not possible
+   //
+   // Transition A -> A1:
+   // The parent sink emits immediately a value which is the last seen
+   // value of the parent sink (i.e. as if children sinks became null) if any
+   // Transition A -> A2:
+   // All children and parent sinks are terminated. Nothing is emitted,
+   //
+   // Transition B -> B1:
+   // Nothing is visibly emitted on any sinks (actually null is emitted at
+   // children's level but filtered out), but children sinks are activated.
+   // Whenever a child sink will emit a value, that value will be merged
+   // into the parent sinks
+   //
+   // Transition B -> B2:
+   // Nothing is emitted on the parent sinks, which are terminated.
+   //
+   // Transition C -> C1:
+   // Parent and children sinks are activated and combined. The current
+   // logic is hierarchical :
+   // - if the parent sinks emit first, then that value is passed
+   // - if the children sinks emit first, then till the parent value emit
+   // its first value, nothing is passed (à la `combineLatest`)
+   // Starting the top level parent sink will emit a null.
+   //
+   // Transition C -> C2:
+   // Parent sinks are activated.
+   // Starting the top level parent sink will emit a null.
    */
   QUnit.test("main cases - nested routing", function exec_test(assert) {
     let done = assert.async(4)
@@ -318,7 +328,7 @@ define(function (require) {
           //userA: 'a---b-ac--aba--c',
           //diagr: '-a--b--c--d--e--f--a--b--c--d-'}},
           //diagr: '-a-b-c-d-e-f-a-b-c-d-e-f-'}},
-          diagram: '-a--b--c--def--g-h-i-j-i', values: {
+          diagram: '-a--b--c--def--g-h-i-j-k', values: {
             a: 'bruno/1',
             b: 'ted/1',
             c: 'ted',
@@ -329,6 +339,7 @@ define(function (require) {
             h: '',
             i: undefined,
             j: 'ted/1/sth',
+            k: undefined,
           }
         }
       }
@@ -378,7 +389,27 @@ define(function (require) {
       }
     }
 
-    const vNodes = [
+    const expectedUserAction1 = [
+      null, // null because children sinks starts with null
+      "child component - starting",
+      "child component - user action - select",
+      null, // null because children sinks starts with null
+      "child component - starting",
+      "child component - user action - click",
+      "child component - user action - hover",
+      null, // null because children sinks starts with null
+      "child component - starting",
+      "child component - user action - click",
+      "child component - user action - select",
+      "child component - user action - click",
+      "child component - user action - hover",
+      null, // match -> no match
+      null, // null because children sinks starts with null
+      "child component - starting",
+      null, // match -> no match
+    ]
+
+    const expectedVNodes = [
       null,
       makeVNode('bruno', 1, 'b', 'b'),
       null,
@@ -402,47 +433,58 @@ define(function (require) {
       null
     ]
 
+    const expectedRouteLog = [
+      null, // all children sinks start with null
+      "Child component 1 - routeLog - bruno",
+      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 1)",
+      null, // null because all children sinks start with null
+      "Child component 1 - routeLog - ted",
+      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 1)",
+      "Child component 1 - routeLog - ted",
+      null, // null because of transition child id=1 -> no matching
+      null, // null because all children sinks start with null
+      "Child component 1 - routeLog - bruno",
+      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 2)",
+      "Child component 1 - routeLog - bruno",
+      "great child component - routeLog - (user: undefined, id: 2)",
+      "Child component 1 - routeLog - bruno",
+      "great child component - routeLog - (user: undefined, id: 2)",
+      "Child component 1 - routeLog - bruno",
+      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 3)",
+      null, // null because all children sinks start with null
+      "Child component 1 - routeLog - ",
+      // null because of transition matching -> no matching (child)
+      null,
+      // null because of transition matching -> no matching (parent)
+      // reminder : route changed to undefined
+      null,
+      null, // null because all children sinks start with null
+      "Child component 1 - routeLog - ted",
+      null, // null because all children sinks start with null
+      "great child component - routeLog - (user: undefined, id: 1)",
+      null, // null because of transition matching -> no matching (parent)
+    ]
+
     /** @type TestResults */
     const expected = {
       DOM: {
-        outputs: vNodes,
+        outputs: expectedVNodes,
         successMessage: 'sink DOM produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },
       routeLog: {
-        outputs: [
-          "Child component 1 - routeLog - bruno",
-          "great child component - routeLog - (user: undefined, id: 1)",
-          "Child component 1 - routeLog - ted",
-          "Child component 1 - routeLog - bruno",
-          "great child component - routeLog - (user: undefined, id: 2)",
-          "Child component 1 - routeLog - bruno",
-          "great child component - routeLog - (user: undefined, id: 2)",
-          "Child component 1 - routeLog - bruno",
-          "great child component - routeLog - (user: undefined, id: 2)",
-          "Child component 1 - routeLog - bruno",
-          "great child component - routeLog - (user: undefined, id: 3)",
-          "Child component 1 - routeLog - "
-        ],
+        outputs: expectedRouteLog,
         successMessage: 'sink routeLog produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },
       userAction1$: {
-        outputs: [
-          "child component - starting",
-          "child component - user action - select",
-          "child component - starting",
-          "child component - user action - click",
-          "child component - user action - hover",
-          "child component - starting",
-          "child component - user action - click",
-          "child component - user action - select",
-          "child component - user action - click",
-          "child component - starting",
-          "child component - user action - hover",
-        ],
+        outputs: expectedUserAction1,
         successMessage: 'sink userAction1$ produces the expected values',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
@@ -474,6 +516,9 @@ define(function (require) {
       tickDuration: 5,
       waitForFinishDelay: 100
     })
+
+    assert.equal(true, true, 'sinks whose name is not present in sinkNames' +
+      ' are not merged')
 
   })
 
