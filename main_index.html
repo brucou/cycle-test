@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>main</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/mermaid.css" />
+    <!-- Requirejs-->
+    <script src="js/vendor/require.js"></script>
+
+</head>
+<body>
+<div id="mermaid"></div>
+
+<div id="app">
+    <div id="appmain"></div>
+</div>
+<div id="feedback"></div>
+
+<script>
+    require({
+        baseUrl: 'src/js',//here the path for required modules is relative to the index.html folder in which requirejs is loaded
+        paths: {
+            rx: 'vendor/rx.all',
+            cycle: 'vendor/cycle',
+            route_matcher: 'vendor/routematcher',
+            mermaid: 'vendor/mermaidAPI',
+            ramda : 'vendor/ramda',
+            lodash : 'vendor/lodash',
+            'cycle-snabbdom': 'vendor/cycle-snabbdom',
+            history : 'vendor/history',
+            snabbdom: 'vendor/snabbdom',
+            snabbdom_attributes: 'vendor/snabbdom_attributes',
+            snabbdom_class: 'vendor/snabbdom_class',
+            snabbdom_eventlisteners: 'vendor/snabbdom_eventlisteners',
+            snabbdom_props: 'vendor/snabbdom_props',
+            snabbdom_style: 'vendor/snabbdom_style',
+            'snabbdom-to-html': 'vendor/snabbdom-to-html',
+        }
+    }, [
+        // but here the path for `require` dependencies is still relative to the `index.html`
+        "main.js",
+        //                "qunit_specs/demo.specs.js",
+    ], function () {
+        console.info("Starting");
+    });
+</script>
+
+</body>
+</html>

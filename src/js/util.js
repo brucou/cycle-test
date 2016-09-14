@@ -130,8 +130,14 @@ function require_util(Rx, $, R, Sdom) {
 
         const mergedSettings = mergeR(innerSettings, _settings)
 
-        let sinks = componentDef.makeAllSinks(sources, mergedSettings, children)
-        assertSinksContracts(sources, sinksContract)
+        const extendedSources = shareAllSources(
+          mergeR(sources, makeLocalSources(sources, mergedSettings))
+        )
+
+        let sinks = componentDef.makeAllSinks(
+          extendedSources, mergedSettings, children
+        )
+        assertSinksContracts(sinks, sinksContract)
 
         // TODO : factor out the trace too so I don't duplicate it
         const tracedSinks = trace(sinks, mergedSettings)
