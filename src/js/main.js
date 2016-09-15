@@ -133,7 +133,6 @@ define(function (require) {
 
     console.log('render group', Sdom2html(renderGroups(groups)))
 
-
     const setUpSources = {
       makeLocalSources: function makeShowGroupCoreExtraSources(sources) {
         const route$ = sources.router.pluck('pathname').map(route => {
@@ -144,7 +143,10 @@ define(function (require) {
         return {
           route$: route$
         }
-      }
+      },
+        makeLocalSettings : function (settings){
+            return {sinkNames: ['DOM', 'router']}
+        }
     }
 
     const showGroupCore = {
@@ -187,7 +189,7 @@ define(function (require) {
       ])
     ])
 
-    const pageSinks = page(sources, {sinkNames: ['DOM', 'router']})
+    const pageSinks = page(sources, {})
 
     return {
       DOM: pageSinks.DOM,
