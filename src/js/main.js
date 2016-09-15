@@ -181,13 +181,13 @@ define(function (require) {
 
     const page = m(setUpSources, {}, [
       m(showGroupCore, {}, [
-        m(Router, {route: 'group/:groupId', sinkNames: ['DOM', 'router']}, [
+        m(Router, {route: 'group/:groupId'}, [
           showGroupDetails
         ])
       ])
     ])
 
-    const pageSinks = page(sources, {})
+    const pageSinks = page(sources, {sinkNames: ['DOM', 'router']})
 
     return {
       DOM: pageSinks.DOM,
