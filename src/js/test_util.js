@@ -31,7 +31,6 @@ define(function (require) {
  */
 
 function require_test_utils(Rx, $, R, U) {
-  const makeSourceFromDiagram = U.makeSourceFromDiagram
   const identity = R.identity
   const mapObjIndexed = R.mapObjIndexed
   const mapIndexed = R.addIndex(R.map)
@@ -75,60 +74,6 @@ function require_test_utils(Rx, $, R, U) {
 
   //////
   // test execution helpers
-  function endOf(sourcesSimulation$) {
-    return $.merge(valuesR(sourcesSimulation$)).last()
-  }
-
-  function sendTestInputsTo(testSources, settings) {
-    const defaultTimeUnit = 1000
-    const timeUnit = settings.timeUnit || defaultTimeUnit
-
-    return function sendTestInputs(sequence, sourceName, obj) {
-      let sourceSimulation$ = makeSourceFromDiagram(
-        sequence.diagram,
-        {values: sequence.values, timeUnit: timeUnit}
-      )
-      // shared as it will be subscribed several times
-      // in different places
-        .share()
-
-      // wire the inputs of that source to the corresponding subject
-      sourceSimulation$.subscribe(testSources[sourceName])
-
-      return sourceSimulation$
-    }
-  }
-
-  function getTestResultsOf(sourcesSimulation, testCase, settings) {
-    const defaultWaitForFinishDelay = 50
-    const waitForFinishDelay = settings.waitForFinishDelay
-      || defaultWaitForFinishDelay
-    const expected = testCase.expected
-
-    return function getTestResults(sink$, sinkName) {
-      if (U.isUndefined(sink$)) {
-        console.warn('getTestResults: received an undefined sink ' + sinkName)
-        return $.of([])
-      }
-
-      return sink$
-        .scan(function buildResults(accumulatedResults, sinkValue) {
-          const transformFn = expected[sinkName].transformFn || identity
-          const transformedResult = transformFn(sinkValue)
-          accumulatedResults.push(transformedResult);
-
-          return accumulatedResults;
-        }, [])
-        //        .do(rxlog('Transformed results for sink ' + sinkName + ' :'))
-        // Give it some time to process the inputs,
-        // after the inputs have finished being emitted
-        // That's arbitrary, keep it in mind that the testing helper
-        // is not suitable for functions with large processing delay
-        // between input and the corresponding output
-        .sample(endOf(sourcesSimulation).delay(waitForFinishDelay))
-        .take(1)
-    }
-  }
 
   function analyzeTestResultsCurried(analyzeTestResultsFn, expectedResults,
                                      successMessage) {
@@ -179,7 +124,6 @@ function require_test_utils(Rx, $, R, U) {
 
           return accumulatedResults;
         }, [])
-        //        .do(rxlog('Transformed results for sink ' + sinkName + ' :'))
         // Give it some time to process the inputs,
         // after the inputs have finished being emitted
         // That's arbitrary, keep it in mind that the testing helper
@@ -335,11 +279,12 @@ function require_test_utils(Rx, $, R, U) {
       }, $.empty(), indexRange)
         .share()
 
-    // execute the function to be tested (for example a cycle component)
+    // Execute the function to be tested (for example a cycle component)
     // with the source subjects
     console.groupCollapsed('runTestScenario: executing test function')
     let testSinks = testFn(sourcesSubjects)
     console.groupEnd('runTestScenario: executing test function')
+
     if (!isOptSinks(testSinks)) {
       throw 'encountered a sink which is not an observable!'
     }
@@ -380,6 +325,5 @@ function require_test_utils(Rx, $, R, U) {
 
   return {
     runTestScenario: runTestScenario,
-//    makeTestSources: makeTestSources
   }
 }

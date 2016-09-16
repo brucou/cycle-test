@@ -9,7 +9,10 @@ define(function (require) {
 
 function require_util(Rx, $, R, Sdom) {
   const {h, div, span} = Sdom
-  const {mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq, merge, reduce, all, either, clone} = R
+  const {
+      mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq,
+      merge, reduce, all, either, clone
+  } = R
   const mapR = R.map
   const mapIndexed = R.addIndex(R.map)
   const valuesR = R.values
@@ -21,6 +24,7 @@ function require_util(Rx, $, R, Sdom) {
   // Configuration
   // TODO : put all constant like this is a prop file with a json object
   // TODO : make it an optional setting to be passed to the router
+  // TODO : put the m helper in a separate file (combinator? like the router)
   // organized by category, here the category is sources
   const routeSourceName = 'route$'
 
@@ -613,105 +617,6 @@ function require_util(Rx, $, R, Sdom) {
     )
   }
 
-  // Testing utilities
-  const defaultTimeUnit = 20
-
-  /**
-   *
-   * @param {String} _diagram
-   * @param {{timeUnit:Number, errorValue:Object, values:Object}} opt
-   * @returns {{sequence: Array, completeDelay: undefined}}
-   */
-  function parseDiagram(_diagram, opt) {
-    const diagram = _diagram.trim()
-    const timeUnit = (opt && opt.timeUnit) ? opt.timeUnit : defaultTimeUnit
-    const errorVal = (opt && opt.errorValue) ? opt.errorValue : '#'
-    const values = (opt && opt.values) ? opt.values : {};
-
-    let sequence = []
-    let completeDelay = undefined
-
-    const L = diagram.length
-    for (let i = 0; i < L; i++) {
-      const c = diagram[i];
-      const time = timeUnit * i;
-      switch (c) {
-        case '-':
-          sequence.push({type: 'none'})
-          break;
-        case '#':
-          sequence.push({type: 'error', data: errorVal, time: time})
-          break;
-        case '|':
-          sequence.push({type: 'complete', time: time})
-          completeDelay = time
-          break;
-        default:
-          const val = values.hasOwnProperty(c) ? values[c] : c;
-          sequence.push({type: 'next', data: val, time: time})
-          break;
-      }
-    }
-
-    return {sequence, completeDelay}
-  }
-
-  /**
-   * Creates a real stream out of an ASCII drawing of a stream. Each string
-   * character represents an amount of time passed.
-   * `-` characters represent nothing special, `|` is a symbol to mark the
-   * completion of the stream, `#` is an error on the stream, and any other
-   * character is a "next" event.
-   * @param {String} diagram
-   * @param {Object=} opt
-   */
-  function makeSourceFromDiagram(diagram, opt) {
-    // 1. from diagram,options, make array of values to send
-    // for each, flatMap with the corresponding delay to error
-
-    const timeUnit = opt.timeUnit || defaultTimeUnit
-    const parseObj = parseDiagram(diagram, opt)
-    const sequence = parseObj.sequence
-
-    return $.from(sequence)
-        .scan(function (acc, value) {
-          acc.time = acc.time + timeUnit
-          acc.value = {
-            type: value.type,
-            data: value.data,
-            time: value.time
-          }
-          return acc
-        }, {time: 0, value: undefined})
-        .filter(x => x.type !== 'none')
-        .flatMap(function (timedValue) {
-          var time = timedValue.time
-          var value = timedValue.value
-
-          if (value.type === 'none') {
-            console.log('parsing - at time %d: no emission', time)
-            return $.empty()
-          }
-
-          if (value.type === 'next') {
-            console.log('scheduling %o emission at time %d', value, time)
-            return $.of(value.data).delay(time)
-          }
-
-          if (value.type === 'error') {
-            console.log('parsing # at time %d: emitting error', time)
-            return $.throw(value.data)
-          }
-
-          if (value.type === 'complete') {
-            return $.empty()
-          }
-        })
-        .timeInterval()
-        .tap(console.log.bind(console, 'emitting test input:'))
-        .pluck('value')
-  }
-
   function makeDivVNode(x) {
     return {
       "children": undefined,
@@ -726,7 +631,6 @@ function require_util(Rx, $, R, Sdom) {
   return {
     m: m,
     makeDivVNode: makeDivVNode,
-    makeSourceFromDiagram: makeSourceFromDiagram,
     assertSignature: assertSignature,
     assertContract: assertContract,
     projectSinksOn: projectSinksOn,
