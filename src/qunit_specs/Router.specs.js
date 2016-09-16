@@ -14,16 +14,6 @@ define(function (require) {
   const runTestScenario = tutils.runTestScenario
   const m = U.m
 
-  // TODO : move to const.js file ?
-  const nullVNode = {
-    "children": undefined,
-    "data": undefined,
-    "elm": undefined,
-    "key": undefined,
-    "sel": undefined,
-    "text": undefined
-  }
-
   QUnit.module("Testing Router component", {})
 
   QUnit.test("main cases - non-nested routing", function exec_test(assert) {
@@ -291,9 +281,9 @@ define(function (require) {
       }
     }
 
-    // TODO : be careful about mutation of sinkNames... it is passed down
-    // the children, so only need to use it once, but what if we need a
-    // different sinknames at a lower level?? should be fine but better test
+    // Note that if nested routers redefine `sinkNames` it will have no impact
+    // on previous definition, as settings are local to each child : children
+    // inherit settings from the parent through copy (passing by value)
     console.groupCollapsed('creating mComponent')
     const mComponent = m(Router, {
       route: ':user',
@@ -407,21 +397,21 @@ define(function (require) {
 
     const expectedRouteLog = [
       "Child component 1 - routeLog - bruno",
-      "great child component - routeLog - (user: undefined, id: 1)",
+      "great child component - routeLog - (user: bruno, id: 1)",
       "Child component 1 - routeLog - ted",
-      "great child component - routeLog - (user: undefined, id: 1)",
+      "great child component - routeLog - (user: ted, id: 1)",
       "Child component 1 - routeLog - ted",
       "Child component 1 - routeLog - bruno",
-      "great child component - routeLog - (user: undefined, id: 2)",
+      "great child component - routeLog - (user: bruno, id: 2)",
       "Child component 1 - routeLog - bruno",
-      "great child component - routeLog - (user: undefined, id: 2)",
+      "great child component - routeLog - (user: bruno, id: 2)",
       "Child component 1 - routeLog - bruno",
-      "great child component - routeLog - (user: undefined, id: 2)",
+      "great child component - routeLog - (user: bruno, id: 2)",
       "Child component 1 - routeLog - bruno",
-      "great child component - routeLog - (user: undefined, id: 3)",
+      "great child component - routeLog - (user: bruno, id: 3)",
       "Child component 1 - routeLog - ",
       "Child component 1 - routeLog - ted",
-      "great child component - routeLog - (user: undefined, id: 1)",
+      "great child component - routeLog - (user: ted, id: 1)"
     ]
 
     const expectedUserAction1 = [
@@ -463,7 +453,7 @@ define(function (require) {
       },
       routeLog: {
         outputs: expectedRouteLog,
-        successMessage: 'sink routeLog produces the expected values',
+        successMessage: 'routeParams are merged recursively, i.e. the nested children have access to the routeParams from parent level',
         analyzeTestResults: analyzeTestResults,
         transformFn: undefined,
       },

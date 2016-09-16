@@ -8,29 +8,19 @@ define(function (require) {
 })
 
 function require_util(Rx, $, R, Sdom) {
-  const h = Sdom.h
-  const div = Sdom.div
-  const span = Sdom.span
-
-  const cloneR = R.clone
+  const {h, div, span} = Sdom
+  const {mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq, merge, reduce, all, either, clone} = R
   const mapR = R.map
-  const mapObjIndexed = R.mapObjIndexed
   const mapIndexed = R.addIndex(R.map)
-  const mergeR = R.merge
   const valuesR = R.values
-  const eitherR = R.either
-  const flatten = R.flatten
-  const allR = R.all
-  const keys = R.keys
-  const reduceR = R.reduce
-  const always = R.always
-  const reject = R.reject
-  const isNil = R.isNil
-  const complement = R.complement
-  const uniq = R.uniq
+  const deepMerge = function deepMerge(a, b) {
+    return (R.is(Object, a) && R.is(Object, b)) ? R.mergeWith(deepMerge, a, b) : b;
+  }
+
 
   // Configuration
   // TODO : put all constant like this is a prop file with a json object
+  // TODO : make it an optional setting to be passed to the router
   // organized by category, here the category is sources
   const routeSourceName = 'route$'
 
@@ -64,6 +54,7 @@ function require_util(Rx, $, R, Sdom) {
   /**
    * @typedef {function(Sources, Settings):Sinks} Component
    */
+
   /**
    * Returns a component specified by :
    * - a component definition object (nullable)
@@ -111,7 +102,7 @@ function require_util(Rx, $, R, Sdom) {
     assertSignature('m', arguments, mSignature)
 
     const makeLocalSources = componentDef.makeLocalSources || always(null)
-    const makeLocalSettings = componentDef.makeLocalSettings || always(null)
+    const makeLocalSettings = componentDef.makeLocalSettings || always({})
     const makeOwnSinks = componentDef.makeOwnSinks || always(null)
     const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
     const sinksContract = componentDef.sinksContract || always(true)
@@ -126,16 +117,18 @@ function require_util(Rx, $, R, Sdom) {
         console.groupCollapsed('m router component function - ' + _settings.trace || "" + ':')
         console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
 
+
         assertSourcesContracts(sources, sourcesContract)
 
-        const mergedSettings = mergeR(innerSettings, _settings)
+        innerSettings = innerSettings || {}
+        const mergedSettings = deepMerge(innerSettings, _settings)
 
         const extendedSources = shareAllSources(
-          mergeR(sources, makeLocalSources(sources, mergedSettings))
+            merge(sources, makeLocalSources(sources, mergedSettings))
         )
 
         let sinks = componentDef.makeAllSinks(
-          extendedSources, mergedSettings, children
+            extendedSources, mergedSettings, children
         )
         assertSinksContracts(sinks, sinksContract)
 
@@ -153,8 +146,9 @@ function require_util(Rx, $, R, Sdom) {
         console.groupCollapsed('m component function:')
         console.log('sources, innerSettings', sources, innerSettings)
 
-        //        const mergedSettings = mergeR(_settings, innerSettings)
-        const mergedSettings = mergeR(innerSettings, _settings)
+
+        innerSettings = innerSettings || {}
+        const mergedSettings = deepMerge(innerSettings, _settings)
 
         assertSourcesContracts(sources, sourcesContract)
 
@@ -163,13 +157,13 @@ function require_util(Rx, $, R, Sdom) {
         // Extra sources are derived from the `sources`
         // received as input, which remain untouched
         const extendedSources = shareAllSources(
-          mergeR(sources, makeLocalSources(sources, mergedSettings))
+            merge(sources, makeLocalSources(sources, mergedSettings))
         )
-        // Note that per `mergeR` ramda spec. the second object's values
+        // Note that per `merge` ramda spec. the second object's values
         // replace those from the first in case of key conflict
-        const localSettings = mergeR(
-          mergedSettings,
-          makeLocalSettings(mergedSettings)
+        const localSettings = deepMerge(
+            makeLocalSettings(mergedSettings),
+            mergedSettings
         )
 
         console.groupCollapsed('m router component function - ' + _settings.trace || "" + ' : makeOwnSinks:')
@@ -180,8 +174,8 @@ function require_util(Rx, $, R, Sdom) {
 
         console.group('m - computing children sinks')
         const childrenSinks = mapR(
-          childComponent => childComponent(extendedSources, localSettings),
-          children
+            childComponent => childComponent(extendedSources, localSettings),
+            children
         )
         console.groupEnd('m - computing children sinks')
         assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
@@ -203,24 +197,6 @@ function require_util(Rx, $, R, Sdom) {
         //       interrupting the application implementation-wise, it might be
         //       necessary to add a `currentPath` parameter somewhere which
         //       carries the current path down the tree
-        // TODO: sinks should ALWAYS be shareReplay-ed(1) automatically
-        //       a priori, if we have a sharedReplay stream, it is always possible to ignore the replayed value
-        //       with `skip(1)`, which could be turned into a new operator `skipReplay()` for the sake of clarity of intent
-        //       but it is not possible to get the last value of a stream if not sharedReplayed beforehand,
-        //       unless $.combineLatest is used. So it is probably safer to always replay sinks
-        // TODO : sources should ALWAYS be shared as we don't know how many children will read from it
-        //        A source might have to be share-replayed (if it represents a behavior),
-        //        in which case at `makeLocalSources` level, a replay instruction can be added.
-        //        If possible detect first if the source is `sharedReplay` before
-        //        adding `share()` to it. I can't think of a case where a source
-        //        MUST NOT be shared. Top-level sources are subjects,
-        //        hence they are hot streams by nature. Local sources are built
-        //        from top-level sources, and they end up in the global sinks
-        //        where the top-level sources are connected. When top-level
-        //        sources are connected, the local sources also are. If they would
-        //        be cold streams, this means they might loose incoming values
-        //        before they are subscribed to. Can't think of a use case where
-        //        that behavior is desirable.
 
         console.groupEnd()
         return tracedSinks
@@ -259,17 +235,17 @@ function require_util(Rx, $, R, Sdom) {
       return ruleFn(value)
     }, args)
 
-    const hasFailed = reduceR((acc, value) => {
+    const hasFailed = reduce((acc, value) => {
       return !value || acc
     }, false, validatedArgs)
 
     if (hasFailed) {
       const validationMessages = mapIndexed((value, index) => {
-          return value ?
-            '' :
-            [fnName, ':', 'argument', argNames[index],
-              'fails rule', vRules[index].name].join(' ')
-        }, validatedArgs
+            return value ?
+                '' :
+                [fnName, ':', 'argument', argNames[index],
+                  'fails rule', vRules[index].name].join(' ')
+          }, validatedArgs
       ).join('\n')
       const errorMessage = ['assertSignature:', validationMessages].join(' ')
       throw errorMessage
@@ -295,7 +271,6 @@ function require_util(Rx, $, R, Sdom) {
     return true
   }
 
-  // TODO : express all these with ramda is, isNil, isArrayLike
   /**
    * Returns true iff the passed parameter is null or undefined OR a POJO
    * @param {Object} obj
@@ -311,12 +286,12 @@ function require_util(Rx, $, R, Sdom) {
     // Note that `==` is used instead of `===`
     // This allows to test for `undefined` and `null` at the same time
     return obj == null || (
-        (!obj.makeLocalSources || isFunction(obj.makeLocalSources)) &&
-        (!obj.makeLocalSettings || isFunction(obj.makeLocalSettings)) &&
-        (!obj.makeOwnSinks || isFunction(obj.makeOwnSinks)) &&
-        (!obj.mergeSinks || isFunction(obj.mergeSinks)) &&
-        (!obj.sinksContract || isFunction(obj.sinksContract))
-      )
+            (!obj.makeLocalSources || isFunction(obj.makeLocalSources)) &&
+            (!obj.makeLocalSettings || isFunction(obj.makeLocalSettings)) &&
+            (!obj.makeOwnSinks || isFunction(obj.makeOwnSinks)) &&
+            (!obj.mergeSinks || isFunction(obj.mergeSinks)) &&
+            (!obj.sinksContract || isFunction(obj.sinksContract))
+        )
   }
 
   function isUndefined(obj) {
@@ -356,13 +331,13 @@ function require_util(Rx, $, R, Sdom) {
         return false
       }
 
-      return allR(predicateFn, obj)
+      return all(predicateFn, obj)
     }
   }
 
   function isVNode(obj) {
     return ["children", "data", "elm", "key", "sel", "text"]
-      .every(prop => prop in obj)
+        .every(prop => prop in obj)
   }
 
   /**
@@ -393,7 +368,7 @@ function require_util(Rx, $, R, Sdom) {
 
   function isOptSinks(obj) {
     // obj can be null
-    return !obj || allR(eitherR(isNil, isObservable), valuesR(obj))
+    return !obj || all(either(isNil, isObservable), valuesR(obj))
   }
 
   function isArrayOptSinks(arrSinks) {
@@ -403,18 +378,18 @@ function require_util(Rx, $, R, Sdom) {
   function assertSourcesContracts(sources, sourcesContract) {
     // Check sources contracts
     assertContract(isSources, [sources],
-      'm : `sources` parameter is invalid')
+        'm : `sources` parameter is invalid')
     // TODO : documentation - contract for sources could :
     // - check that specific sources are included, and/or observable
     assertContract(sourcesContract, [sources], 'm: `sources`' +
-      ' parameter fails contract ' + sourcesContract.name)
+        ' parameter fails contract ' + sourcesContract.name)
   }
 
   function assertSinksContracts(sinks, sinksContract) {
     assertContract(isOptSinks, [sinks],
-      'mergeSinks must return a hash of observable sink')
+        'mergeSinks must return a hash of observable sink')
     assertContract(sinksContract, [sinks],
-      'fails custom contract ' + sinksContract.name)
+        'fails custom contract ' + sinksContract.name)
   }
 
   /**
@@ -452,7 +427,7 @@ function require_util(Rx, $, R, Sdom) {
       // We can have a null vNode emitted by a sink if that sink is empty
       let _arrayVNode = removeNullsFromArray(arrayVNode)
       assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
-        ' stream VNode objects! Got ' + _arrayVNode)
+          ' stream VNode objects! Got ' + _arrayVNode)
 
       if (parentDOMSink) {
         // Case : the parent sinks have a DOM sink
@@ -468,9 +443,9 @@ function require_util(Rx, $, R, Sdom) {
         // Note that this is specific to the snabbdom vNode data structure
         // Note that we defensively clone vNodes so the original vNode remains
         // immuted
-        let parentVNode = cloneR(_arrayVNode.shift())
+        let parentVNode = clone(_arrayVNode.shift())
         let childrenVNode = _arrayVNode
-        parentVNode.children = cloneR(parentVNode.children) || []
+        parentVNode.children = clone(parentVNode.children) || []
 
         // childrenVNode could be null if all children sinks are empty
         // observables, in which case we just return the parentVNode
@@ -550,11 +525,11 @@ function require_util(Rx, $, R, Sdom) {
    */
   function emitNullIfEmpty(sink) {
     return isNil(sink) ?
-      null :
-      $.merge(
-        sink,
-        sink.isEmpty().filter(x=>x).map(x => null)
-      )
+        null :
+        $.merge(
+            sink,
+            sink.isEmpty().filter(x=>x).map(x => null)
+        )
   }
 
   /**
@@ -589,8 +564,8 @@ function require_util(Rx, $, R, Sdom) {
     }
 
     return $.combineLatest(allDOMSinks)
-      .tap(console.log.bind(console, 'mergeDOMSinksDefault: allDOMSinks'))
-      .map(mergeChildrenIntoParentDOM(parentDOMSink))
+        .tap(console.log.bind(console, 'mergeDOMSinksDefault: allDOMSinks'))
+        .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
   function mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName) {
@@ -632,9 +607,9 @@ function require_util(Rx, $, R, Sdom) {
     const allSinks = flatten(removeNullsFromArray([parentSinks, childrenSinks]))
     const sinkNames = getSinkNamesFromSinksArray(allSinks)
 
-    return reduceR(
-      // Note : default merge does not make use of the settings!
-      makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames
+    return reduce(
+        // Note : default merge does not make use of the settings!
+        makeDefaultMergedSinks(parentSinks, childrenSinks), {}, sinkNames
     )
   }
 
@@ -697,53 +672,44 @@ function require_util(Rx, $, R, Sdom) {
     const timeUnit = opt.timeUnit || defaultTimeUnit
     const parseObj = parseDiagram(diagram, opt)
     const sequence = parseObj.sequence
-    // TODO : change it to a mapping to an array, with time difference, and concatAll
-    // to make sure they are passed in order
-    // try also mergeAll to see if there is a difference
-    // because for now, the delay does not seem to be working
-    // TODO : add tests where I check that with several sources, the values are
-    // emitted one after the other, roughly x seconds after one another
-    // Si(t). Not possible Sm(t) < Sn(t') if t > t'
-    // or write another function which takes the set of diagrams, and zips them
-    // to make sure they are emitted in sync.
-    // work-around : use a high-enough timeUnit (50ms seems to work)
+
     return $.from(sequence)
-      .scan(function (acc, value) {
-        acc.time = acc.time + timeUnit
-        acc.value = {
-          type: value.type,
-          data: value.data,
-          time: value.time
-        }
-        return acc
-      }, {time: 0, value: undefined})
-      .filter(x => x.type !== 'none')
-      .flatMap(function (timedValue) {
-        var time = timedValue.time
-        var value = timedValue.value
+        .scan(function (acc, value) {
+          acc.time = acc.time + timeUnit
+          acc.value = {
+            type: value.type,
+            data: value.data,
+            time: value.time
+          }
+          return acc
+        }, {time: 0, value: undefined})
+        .filter(x => x.type !== 'none')
+        .flatMap(function (timedValue) {
+          var time = timedValue.time
+          var value = timedValue.value
 
-        if (value.type === 'none') {
-          console.log('parsing - at time %d: no emission', time)
-          return $.empty()
-        }
+          if (value.type === 'none') {
+            console.log('parsing - at time %d: no emission', time)
+            return $.empty()
+          }
 
-        if (value.type === 'next') {
-          console.log('scheduling %o emission at time %d', value, time)
-          return $.of(value.data).delay(time)
-        }
+          if (value.type === 'next') {
+            console.log('scheduling %o emission at time %d', value, time)
+            return $.of(value.data).delay(time)
+          }
 
-        if (value.type === 'error') {
-          console.log('parsing # at time %d: emitting error', time)
-          return $.throw(value.data)
-        }
+          if (value.type === 'error') {
+            console.log('parsing # at time %d: emitting error', time)
+            return $.throw(value.data)
+          }
 
-        if (value.type === 'complete') {
-          return $.empty()
-        }
-      })
-      .timeInterval()
-      .tap(console.log.bind(console, 'emitting test input:'))
-      .pluck('value')
+          if (value.type === 'complete') {
+            return $.empty()
+          }
+        })
+        .timeInterval()
+        .tap(console.log.bind(console, 'emitting test input:'))
+        .pluck('value')
   }
 
   function makeDivVNode(x) {

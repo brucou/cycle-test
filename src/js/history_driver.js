@@ -7,7 +7,7 @@ define(function (require) {
   return requireHistoryDriver(Rx, $, U, R)
 })
 
-// TODO:  test that it works
+// TODO:  test that it works (go -1 etc)
 function requireHistoryDriver(Rx, $, U, R) {
   const clickEvent = 'undefined' !== typeof document && document.ontouchstart ?
     'touchstart' : 'click';

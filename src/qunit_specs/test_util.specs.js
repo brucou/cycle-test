@@ -72,7 +72,6 @@ define(function (require) {
       ]
 
       /** @type TestResults */
-        // TODO : change types, remove old runTestScenario, rename new
       const expected = {
           m: {
             outputs: ['m-a-0', 'm-b-0', 'm-a-1', 'm-b-1', 'm-b-2'],
