@@ -586,8 +586,8 @@ To match the `h` hyperscript and have an API which allows for shorter code :
 	- `mergeDefaultSinks :: Sinks -> [Sinks] -> Settings -> Sinks`
 - add most relevant component combinators (m version and hyperscript version)
 	- DONE : routing
-	- TODO : switching
-	- TODO : auth (in principle, special case of switching)
+	- WIP : switching
+	- WIP : auth (in principle, special case of switching)
 	- TODO : iterating
 	- TODO : eventing
 
