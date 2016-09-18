@@ -1,3 +1,8 @@
+// TODO : DOCUMENTATION : all settings which should not be inherited from the
+// parent should have default value. This prevents unintentional overriding
+// from the ancestor hierarchy. Settings' default value should be part of
+// the component documentation
+
 define(function (require) {
   const Rx = require('rx')
   const U = require('util')

@@ -11,15 +11,12 @@ function require_util(Rx, $, R, Sdom) {
   const {h, div, span} = Sdom
   const {
       mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq,
-      merge, reduce, all, either, clone
+      merge, reduce, all, either, clone, map, values
   } = R
-  const mapR = R.map
   const mapIndexed = R.addIndex(R.map)
-  const valuesR = R.values
   const deepMerge = function deepMerge(a, b) {
     return (R.is(Object, a) && R.is(Object, b)) ? R.mergeWith(deepMerge, a, b) : b;
   }
-
 
   // Configuration
   // TODO : put all constant like this is a prop file with a json object
@@ -43,7 +40,7 @@ function require_util(Rx, $, R, Sdom) {
    * @property {?function(Sources, Settings)} makeLocalSources
    * @property {?function(Settings)} makeLocalSettings
    * @property {?function(Sources, Settings)} makeOwnSinks
-   * @property {function(Sinks, Sinks, Settings)} mergeSinks
+   * @property {function(Sinks, Array<Sinks>, Settings)} mergeSinks
    * @property {function(Sinks):Boolean} sinksContract
    * @property {function(Sources):Boolean} sourcesContract
    */
@@ -117,10 +114,9 @@ function require_util(Rx, $, R, Sdom) {
     if (componentDef.makeAllSinks) {
       console.groupEnd()
 
-      return function m(sources, innerSettings) {
+      return function mComponent(sources, innerSettings) {
         console.groupCollapsed('m router component function - ' + _settings.trace || "" + ':')
         console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
-
 
         assertSourcesContracts(sources, sourcesContract)
 
@@ -150,7 +146,6 @@ function require_util(Rx, $, R, Sdom) {
         console.groupCollapsed('m component function:')
         console.log('sources, innerSettings', sources, innerSettings)
 
-
         innerSettings = innerSettings || {}
         const mergedSettings = deepMerge(innerSettings, _settings)
 
@@ -177,7 +172,7 @@ function require_util(Rx, $, R, Sdom) {
         console.groupEnd()
 
         console.group('m - computing children sinks')
-        const childrenSinks = mapR(
+        const childrenSinks = map(
             childComponent => childComponent(extendedSources, localSettings),
             children
         )
@@ -225,9 +220,9 @@ function require_util(Rx, $, R, Sdom) {
    * }
    */
   function assertSignature(fnName, _arguments, vRules) {
-    const argNames = flatten(mapR(keys, vRules))
-    const ruleFns = flatten(mapR(function (vRule) {
-      return valuesR(vRule)[0]
+    const argNames = flatten(map(keys, vRules))
+    const ruleFns = flatten(map(function (vRule) {
+      return values(vRule)[0]
     }, vRules))
 
     const args = mapIndexed(function (vRule, index) {
@@ -261,18 +256,26 @@ function require_util(Rx, $, R, Sdom) {
   /**
    * Test against a predicate, and throws an exception if the predicate
    * is not satisfied
-   * @param {function(*): boolean} contractFn Predicate that must be satisfy
+   * @param {function(*): (Boolean|String)} contractFn Predicate that must be
+   * satisfy. Returns true if predicate is satisfied, otherwise return a
+   * string to report about the predicate failure
    * @param {Array<*>} contractArgs
    * @param {String} errorMessage
-   * @returns {boolean}
+   * @returns {Boolean}
    * @throws
    */
   function assertContract(contractFn, contractArgs, errorMessage) {
-    if (!contractFn.apply(null, contractArgs)) {
-      throw 'assertContract : fails contract ' + contractFn.name +
-      '\n' + errorMessage
+    const boolOrError = contractFn.apply(null, contractArgs)
+    const isPredicateSatisfied = isBoolean(boolOrError)
+
+    if (!isPredicateSatisfied) {
+      throw `assertContract: fails contract ${contractFn.name}\n${errorMessage}\n ${boolOrError}`
     }
     return true
+  }
+
+  function defaultsTo(obj, defaultsTo) {
+    if (!obj) return defaultsTo
   }
 
   /**
@@ -308,6 +311,10 @@ function require_util(Rx, $, R, Sdom) {
 
   function isObject(obj) {
     return typeof(obj) == 'object'
+  }
+
+  function isBoolean(obj) {
+    return typeof(obj) == 'boolean'
   }
 
   function isString(obj) {
@@ -372,11 +379,11 @@ function require_util(Rx, $, R, Sdom) {
 
   function isOptSinks(obj) {
     // obj can be null
-    return !obj || all(either(isNil, isObservable), valuesR(obj))
+    return !obj || all(either(isNil, isObservable), values(obj))
   }
 
   function isArrayOptSinks(arrSinks) {
-    return mapR(isOptSinks, arrSinks)
+    return map(isOptSinks, arrSinks)
   }
 
   function assertSourcesContracts(sources, sourcesContract) {
@@ -491,7 +498,7 @@ function require_util(Rx, $, R, Sdom) {
    * @returns {Array<*>}
    */
   function projectSinksOn(prop, obj) {
-    return mapR(x => x ? x[prop] : null, obj)
+    return map(x => x ? x[prop] : null, obj)
   }
 
   /**
@@ -504,7 +511,7 @@ function require_util(Rx, $, R, Sdom) {
    * @returns {Array<String>}
    */
   function getSinkNamesFromSinksArray(aSinks) {
-    return uniq(flatten(mapR(getValidKeys, aSinks)))
+    return uniq(flatten(map(getValidKeys, aSinks)))
   }
 
   function getValidKeys(obj) {
@@ -552,7 +559,7 @@ function require_util(Rx, $, R, Sdom) {
     // We want `combineLatest` to still emit the parent DOM sink, even when
     // one of its children sinks is empty, so we modify the children sinks
     // to emits ONE `Null` value if it is empty
-    const childrenDOMSinksOrNull = mapR(emitNullIfEmpty, projectSinksOn('DOM', childrenSinks))
+    const childrenDOMSinksOrNull = map(emitNullIfEmpty, projectSinksOn('DOM', childrenSinks))
     const parentDOMSinksOrNull = projectSinksOn('DOM', [parentSinks])
 
     const allSinks = flatten([parentDOMSinksOrNull, childrenDOMSinksOrNull])
@@ -635,11 +642,13 @@ function require_util(Rx, $, R, Sdom) {
     assertContract: assertContract,
     projectSinksOn: projectSinksOn,
     getSinkNamesFromSinksArray: getSinkNamesFromSinksArray,
+    defaultsTo : defaultsTo,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,
     isVNode: isVNode,
     isObject: isObject,
+    isBoolean: isBoolean,
     isString: isString,
     isArray: isArray,
     isArrayOf: isArrayOf,

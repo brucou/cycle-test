@@ -120,7 +120,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * @param {Array<Component>} childrenComponents
    */
   function makeAllSinks(sources, settings, childrenComponents) {
-    console.groupCollapsed('makeAllSinks')
+    console.groupCollapsed('Router component > makeAllSinks')
     console.log('sources, settings, childrenComponents', sources, settings, childrenComponents);
 
     const signature = [{settings: isRouteSettings},]
