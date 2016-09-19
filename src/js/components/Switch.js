@@ -61,13 +61,37 @@ define(function (require) {
 
 function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   const {h, div, span} = Sdom
-  const {assertSignature, isString, isArray, isFunction, defaultsTo, m} = U
   const {
-      map, mapObjIndexed, merge, mergeAll, values, either, flatten, all,
-      keys, reduce, always, reject, isNil, uniq, omit, path, complement,
-      prepend
+      assertSignature, isString, isArray, isArrayOf, isFunction, defaultsTo,
+      checkSignature, hasPassedSignatureCheck, isSource, m
+  } = U
+  const {
+      forEach, all, any, map, mapObjIndexed, reduce, keys, values,
+      merge, mergeAll, flatten, prepend, uniq, always, reject,
+      either, isNil, omit, path, complement,
   } = R
   const mapIndexed = R.addIndex(R.map)
+
+  //////
+  // Helper functions
+  function isSwitchSettings(settings) {
+    const {eqFn, caseWhen, sinkNames, on} = settings
+    const signature = {
+      eqFn: or(isNil, isFunction),
+      caseWhen: complement(isNil),
+      sinkNames: isArrayOf(isString),
+      on: or(isString, isFunction)
+    }
+    const signatureErrorMessages = {
+      eqFn: 'eqFn property, when not undefined, must be a function.',
+      caseWhen: 'caseWhen property is mandatory.',
+      sinkNames: 'sinkNames property must be an array of strings',
+      on: '`on` property is mandatory and must be a string or a function.'
+    }
+    const signatureCheck = checkSignature(settings, signature, signatureErrorMessages)
+
+    return hasPassedSignatureCheck(signatureCheck) ? true : signatureCheck
+  }
 
   /**
    * The switch combinator activates a component conditionally depending on
@@ -134,24 +158,26 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     // TODO : analyze whether merge inner settings etc. into the
     // settings passed in AllSinks...
 
-    assertContract(isSwitchSettings, [sources, settings], 'Invalid switch' +
-        ' settings!')
-//TODO : isSwitchSettings and go to bed
+    assertContract(isSwitchSettings, [settings], 'Invalid switch settings!')
+
     let {eqFn, caseWhen, sinkNames, on} = settings
 
-    let guard$, sourceName
-    if (isFunction(on)) {
-      guard$ = on
-    } else {
-      sourceName = on
+    const overload = unfoldObjOverload(on, [
+      {'guard$': isFunction},
+      {'sourceName': isString}
+    ])
+    let {guard$, sourceName, _index} = overload
+
+    if (overload._index === 1) {
+      // Case : overload `settings.on :: SourceName`
+      assertContract(isSource, [sources[sourceName]],
+          `An observable with name ${sourceName} could not be found in sources`)
     }
-    // TODO: make a util function similar to unfoldOverload
 
     // set default values for optional properties
     sourceName = defaultsTo(sourceName, cfg.defaultSwitchComponentSourceName)
     eqFn = defaultsTo(eqFn, cfg.defaultEqFn)
     guard$ = defaultsTo(guard$, sources => sources[sourceName])
-
 
     const shouldSwitch$ = guard$
         .map(x => eqFn(caseWhen, x))

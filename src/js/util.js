@@ -25,6 +25,15 @@ function require_util(Rx, $, R, Sdom) {
   // organized by category, here the category is sources
   const routeSourceName = 'route$'
 
+  // Type checking typings
+  /**
+   * @typedef {String} ErrorMessage
+   */
+  /**
+   * @typedef {Array<ErrorMessage>} SignatureCheck
+   */
+
+  // Component typings
   /**
    * @typedef {Object.<string, Observable>} Sources
    */
@@ -274,6 +283,59 @@ function require_util(Rx, $, R, Sdom) {
     return true
   }
 
+  /**
+   * Returns true iff the signature check did not produce any error messages
+   * @param {SignatureCheck} signatureCheck
+   * @returns {boolean}
+   */
+  function hasPassedSignatureCheck(signatureCheck) {
+    return signatureCheck.join("").length === 0
+  }
+
+  /**
+   * Returns:
+   * - an empty array if the object passed as parameter passes all the
+   * predicates on its properties
+   * - an array with the concatenated error messages otherwise
+   * @param obj
+   * @param {Object.<string, Predicate>} signature
+   * @param {Object.<string, string>} signatureErrorMessages
+   * @returns {SignatureCheck}
+   */
+  function checkSignature(obj, signature, signatureErrorMessages) {
+    return mapObjIndexed((value, key) => {
+      return signature[key](obj) ? "" : signatureErrorMessages[key]
+    }, obj)
+  }
+
+  /**
+   * Returns an object whose keys :
+   * - the first key found in `obj` for which the matching predicate was
+   * fulfilled. Predicates are tested in order of indexing of the array.
+   * - `_index` the index in the array where a predicate was fulfilled if
+   * any, undefined otherwise
+   * @param obj
+   * @param {Array<Object.<string, Predicate>>} overloads
+   * @returns {{}}
+   */
+  function unfoldObjOverload(obj, overloads) {
+    let result = {}
+    let index = 0
+
+    any(overload => mapObjIndexed((predicate, property) => {
+      const predicateEval = predicate(obj[property])
+      if (predicateEval) {
+        result[property] = obj[property]
+        result._index = index
+      }
+      index++
+
+      return predicateEval
+    }, overload), overloads)
+
+    return result
+  }
+
   function defaultsTo(obj, defaultsTo) {
     if (!obj) return defaultsTo
   }
@@ -364,6 +426,10 @@ function require_util(Rx, $, R, Sdom) {
   function isObservable(obj) {
     // duck typing in the absence of a type system
     return isFunction(obj.subscribe)
+  }
+
+  function isSource(obj){
+    return isObservable(obj)
   }
 
   function isSources(obj) {
@@ -640,6 +706,9 @@ function require_util(Rx, $, R, Sdom) {
     makeDivVNode: makeDivVNode,
     assertSignature: assertSignature,
     assertContract: assertContract,
+    hasPassedSignatureCheck : hasPassedSignatureCheck,
+    checkSignature : checkSignature,
+    unfoldObjOverload : unfoldObjOverload,
     projectSinksOn: projectSinksOn,
     getSinkNamesFromSinksArray: getSinkNamesFromSinksArray,
     defaultsTo : defaultsTo,
@@ -653,6 +722,7 @@ function require_util(Rx, $, R, Sdom) {
     isArray: isArray,
     isArrayOf: isArrayOf,
     isObservable: isObservable,
+    isSource : isSource,
     isOptSinks: isOptSinks,
   }
 }
