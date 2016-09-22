@@ -40,9 +40,13 @@ function require_test_utils(Rx, $, R, U) {
   const keysR = R.keys
   const mapR = R.map
   const drop = R.drop
+  const isNil = R.isNil
   const always = R.always
-  const rxlog = function (label) {return console.warn.bind(console, label)}
+  const rxlog = function (label) {
+    return console.warn.bind(console, label)
+  }
   const isOptSinks = U.isOptSinks
+  const removeNullsFromArray = U.removeNullsFromArray
 
   const assertSignature = U.assertSignature
   const assertContract = U.assertContract
@@ -53,14 +57,14 @@ function require_test_utils(Rx, $, R, U) {
   // Contract and signature checking helpers
   function isSourceInput(obj) {
     return obj && keysR(obj).length === 1
-      && U.isString(valuesR(obj)[0].diagram)
+        && U.isString(valuesR(obj)[0].diagram)
   }
 
   function isExpectedStruct(record) {
     return (!record.transformFn || U.isFunction(record.transformFn)) &&
-      record.outputs && U.isArray(record.outputs) &&
-      record.analyzeTestResults && U.isFunction(record.analyzeTestResults) &&
-      (!record.successMessage || U.isString(record.successMessage))
+        record.outputs && U.isArray(record.outputs) &&
+        record.analyzeTestResults && U.isFunction(record.analyzeTestResults) &&
+        (!record.successMessage || U.isString(record.successMessage))
   }
 
   function isExpectedRecord(obj) {
@@ -84,13 +88,12 @@ function require_test_utils(Rx, $, R, U) {
 
   function analyzeTestResults(testExpectedOutputs) {
     return function analyzeTestResults(sinkResults$, sinkName) {
-      const expected = (sinkName !== '_fake') ?
-        testExpectedOutputs[sinkName] :
-      {
-        outputs: [],
-        successMessage: 'fakeSink',
-        analyzeTestResults: always(true)
-      }
+      const expected = testExpectedOutputs[sinkName]
+      // Case the component returns a sink with no expected value
+      // That is a legit possibility, we might not want to test for all
+      // the sinks returned by a component
+      if (isNil(expected)) return null
+
       const expectedResults = expected.outputs
       const successMessage = expected.successMessage
       const analyzeTestResultsFn = expected.analyzeTestResults
@@ -98,17 +101,17 @@ function require_test_utils(Rx, $, R, U) {
       return sinkResults$
       // `analyzeTestResultsFn` should include `assert` which
       // throw if the test fails
-        .tap(analyzeTestResultsCurried(
-          analyzeTestResultsFn, expectedResults, successMessage
+          .tap(analyzeTestResultsCurried(
+              analyzeTestResultsFn, expectedResults, successMessage
+              )
           )
-        )
     }
   }
 
   function getTestResults(testInputs$, expected, settings) {
     const defaultWaitForFinishDelay = 50
     const waitForFinishDelay = settings.waitForFinishDelay
-      || defaultWaitForFinishDelay
+        || defaultWaitForFinishDelay
 
     return function getTestResults(sink$, sinkName) {
       if (U.isUndefined(sink$)) {
@@ -117,20 +120,20 @@ function require_test_utils(Rx, $, R, U) {
       }
 
       return sink$
-        .scan(function buildResults(accumulatedResults, sinkValue) {
-          const transformFn = expected[sinkName].transformFn || identity
-          const transformedResult = transformFn(sinkValue)
-          accumulatedResults.push(transformedResult);
+          .scan(function buildResults(accumulatedResults, sinkValue) {
+            const transformFn = expected[sinkName].transformFn || identity
+            const transformedResult = transformFn(sinkValue)
+            accumulatedResults.push(transformedResult);
 
-          return accumulatedResults;
-        }, [])
-        // Give it some time to process the inputs,
-        // after the inputs have finished being emitted
-        // That's arbitrary, keep it in mind that the testing helper
-        // is not suitable for functions with large processing delay
-        // between input and the corresponding output
-        .sample(testInputs$.last().delay(waitForFinishDelay))
-        .take(1)
+            return accumulatedResults;
+          }, [])
+          // Give it some time to process the inputs,
+          // after the inputs have finished being emitted
+          // That's arbitrary, keep it in mind that the testing helper
+          // is not suitable for functions with large processing delay
+          // between input and the corresponding output
+          .sample(testInputs$.last().delay(waitForFinishDelay))
+          .take(1)
     }
   }
 
@@ -197,16 +200,16 @@ function require_test_utils(Rx, $, R, U) {
     settings = settings || {}
 
     const tickDuration = settings.tickDuration ?
-      settings.tickDuration :
-      tickDurationDefault
+        settings.tickDuration :
+        tickDurationDefault
 
     /** @type {Object.<string, observable>} */
-      // Create the subjects which will receive the input data
-      // There is a standard subject for each source declared in `inputs`
+        // Create the subjects which will receive the input data
+        // There is a standard subject for each source declared in `inputs`
     let sourcesSubjects = reduceR(function makeSubjects(accSubjects, input) {
-        accSubjects[keysR(input)[0]] = new Rx.Subject()
-        return accSubjects
-      }, {}, inputs)
+          accSubjects[keysR(input)[0]] = new Rx.Subject()
+          return accSubjects
+        }, {}, inputs)
 
     // Maximum length of input diagram strings
     // Ex:
@@ -214,70 +217,70 @@ function require_test_utils(Rx, $, R, U) {
     // b : '-x-x-'
     // -> maxLen = 7
     const maxLen = Math.max.apply(null,
-      mapR(sourceInput => valuesR(sourceInput)[0].diagram.length, inputs)
+        mapR(sourceInput => valuesR(sourceInput)[0].diagram.length, inputs)
     )
 
     /** @type {Array<Number>} */
-      // Make an index array [0..maxLen] for iteration purposes
+        // Make an index array [0..maxLen] for iteration purposes
     const indexRange = mapIndexed((input, index) => index, new Array(maxLen))
 
     /** @type Observable<Null>*/
-      // Make a single chained observable which :
-      // - waits some delay before starting to emit
-      // - then for n in [0..maxLen]
-      //   - emits the m values in position n in the input diagram, in `inputs`
-      // array order, `m` being the number of input sources
-      // wait for that emission to finish before nexting (`concat`)
-      // That way we ENSURE that :
-      // -a--
-      // -b--     if a and b are in the same vertical (emission time), they
-      // will always be emitted in the same order in every execution of the
-      // test scenario
-      // -a-
-      // b--      values that are chronologically further in the diagram will
-      // always be emitted later
-      // This allows to have predictable and consistent data when analyzing
-      // test results. That was not the case when using the `setTimeOut`
-      // scheduler to handle delays.
+        // Make a single chained observable which :
+        // - waits some delay before starting to emit
+        // - then for n in [0..maxLen]
+        //   - emits the m values in position n in the input diagram, in `inputs`
+        // array order, `m` being the number of input sources
+        // wait for that emission to finish before nexting (`concat`)
+        // That way we ENSURE that :
+        // -a--
+        // -b--     if a and b are in the same vertical (emission time), they
+        // will always be emitted in the same order in every execution of the
+        // test scenario
+        // -a-
+        // b--      values that are chronologically further in the diagram will
+        // always be emitted later
+        // This allows to have predictable and consistent data when analyzing
+        // test results. That was not the case when using the `setTimeOut`
+        // scheduler to handle delays.
     const testInputs$ = reduceR(function makeInputs$(accEmitInputs$, tickNo) {
-        return accEmitInputs$
-          .delay(tickDuration)
-          .concat(
-            $.from(projectAtIndex(tickNo, inputs))
-              .do(function emitInputs(sourceInput) {
-                // input :: {sourceName : {{diagram : char, values: Array<*>}}
-                const sourceName = keysR(sourceInput)[0]
-                const input = sourceInput[sourceName]
-                const c = input.diagram
-                const values = input.values || {}
-                const sourceSubject = sourcesSubjects[sourceName]
-                const errorVal = (values && values['#']) || '#'
+          return accEmitInputs$
+              .delay(tickDuration)
+              .concat(
+                  $.from(projectAtIndex(tickNo, inputs))
+                      .do(function emitInputs(sourceInput) {
+                        // input :: {sourceName : {{diagram : char, values: Array<*>}}
+                        const sourceName = keysR(sourceInput)[0]
+                        const input = sourceInput[sourceName]
+                        const c = input.diagram
+                        const values = input.values || {}
+                        const sourceSubject = sourcesSubjects[sourceName]
+                        const errorVal = (values && values['#']) || '#'
 
-                if (c) {
-                  // case when the diagram for that particular source is
-                  // finished but other sources might still go on
-                  // In any case, there is nothing to emit
-                  switch (c) {
-                    case '-':
-                      //                      console.log('- doing nothing')
-                      break;
-                    case '#':
-                      sourceSubject.onError({data: errorVal})
-                      break;
-                    case '|':
-                      sourceSubject.onCompleted()
-                      break;
-                    default:
-                      const val = values.hasOwnProperty(c) ? values[c] : c;
-                      console.log('emitting for source ' + sourceName + ' ' + val)
-                      sourceSubject.onNext(val)
-                      break;
-                  }
-                }
-              })
-          )
-      }, $.empty(), indexRange)
-        .share()
+                        if (c) {
+                          // case when the diagram for that particular source is
+                          // finished but other sources might still go on
+                          // In any case, there is nothing to emit
+                          switch (c) {
+                            case '-':
+                              //                      console.log('- doing nothing')
+                              break;
+                            case '#':
+                              sourceSubject.onError({data: errorVal})
+                              break;
+                            case '|':
+                              sourceSubject.onCompleted()
+                              break;
+                            default:
+                              const val = values.hasOwnProperty(c) ? values[c] : c;
+                              console.log('emitting for source ' + sourceName + ' ' + val)
+                              sourceSubject.onNext(val)
+                              break;
+                          }
+                        }
+                      })
+              )
+        }, $.empty(), indexRange)
+            .share()
 
     // Execute the function to be tested (for example a cycle component)
     // with the source subjects
@@ -290,36 +293,37 @@ function require_test_utils(Rx, $, R, U) {
     }
 
     /** @type {Object.<string, Observable<Array<Output>>>} */
-      // Gather the results in an array for easier processing
+        // Gather the results in an array for easier processing
     const sinksResults = mapObjIndexed(
-      getTestResults(testInputs$, expected, settings),
-      testSinks
-      )
+        getTestResults(testInputs$, expected, settings),
+        testSinks
+        )
 
     assertContract(hasTestCaseForEachSink, [expected, keysR(sinksResults)],
-      'runTestScenario : in testCase, could not find test inputs for all sinks!'
+        'runTestScenario : in testCase, could not find test inputs for all sinks!'
     )
 
     // Side-effect : execute `analyzeTestResults` function which
     // makes use of `assert` and can lead to program interruption
     /** @type {Object.<string, Observable<Array<Output>>>} */
     const resultAnalysis = mapObjIndexed(
-      analyzeTestResults(expected),
-      sinksResults
+        analyzeTestResults(expected),
+        sinksResults
     )
 
     // This takes care of actually starting the producers
     // which generate the execution of the test assertions
-    $.merge(valuesR(resultAnalysis))
-      .subscribe(
-        rxlog('Test completed for sink:'),
-        rxlog('An error occurred while executing test!'),
-        rxlog('Tests completed!')
-      )
+    $.merge(removeNullsFromArray(valuesR(resultAnalysis)))
+        .subscribe(
+            rxlog('Test completed for sink:'),
+            rxlog('An error occurred while executing test!'),
+            rxlog('Tests completed!')
+        )
     testInputs$.subscribe(
-      function () {},
-      rxlog('An error occurred while emitting test inputs'),
-      rxlog('test inputs emitted')
+        function () {
+        },
+        rxlog('An error occurred while emitting test inputs'),
+        rxlog('test inputs emitted')
     )
   }
 

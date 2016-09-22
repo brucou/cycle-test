@@ -10,34 +10,6 @@
 // unexpectedly from an ancestor
 // TODO : typings to add
 
-/**
- * Test plan
- *
- * A. Testing strategy
- * Tests must cover HaveParent x Signature x Children
- * That makes for 2 x 2 x 3 potential tests:
- * - HaveParent : whether the component is used under a parent or at top level
- * - Signature : whether Signature 1 or 2
- * - Children : whether the component has no children, 1 child, or several
- * children (We assume here that if the tests pass for two children, they will
- * pass for any number of children > 2)
- *
- * We will reduce the number of tests to perform to: 2 x 2 x (2x2 > 2 ?1 :2) by:
- * - skipping the tests with 1 child, by assuming furthermore that if the
- * tests for several children are passed, the tests for 1 child is passed.
- * - assuming that the behaviour linked to the children argument is
- * independent of the behaviour linked to the other arguments. Hence that
- * behaviour can be tested 'for free' on the way to testing expected
- * behaviour under the rest of the arguments.
- *
- * We hence remain with 4 tests to perform:
- * - (No parent, Parent) x (signature1, signature2)
- * - including (no children, 2 children) in those 4 tests
- *
- * B. Test scenarii
- * TODO : Detail the 2 x 2
- */
-
 define(function (require) {
   const U = require('util')
   const R = require('ramda')
@@ -62,13 +34,14 @@ define(function (require) {
 function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   const {h, div, span} = Sdom
   const {
-      assertSignature, isString, isArray, isArrayOf, isFunction, defaultsTo,
-      checkSignature, hasPassedSignatureCheck, isSource, m
+      assertSignature, assertContract, checkSignature, hasPassedSignatureCheck,
+      isString, isArray, isArrayOf, isFunction, defaultsTo, isSource,
+      unfoldObjOverload, m
   } = U
   const {
       forEach, all, any, map, mapObjIndexed, reduce, keys, values,
       merge, mergeAll, flatten, prepend, uniq, always, reject,
-      either, isNil, omit, path, complement,
+      either, isNil, omit, path, complement, or
   } = R
   const mapIndexed = R.addIndex(R.map)
 
@@ -77,10 +50,10 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   function isSwitchSettings(settings) {
     const {eqFn, caseWhen, sinkNames, on} = settings
     const signature = {
-      eqFn: or(isNil, isFunction),
+      eqFn: either(isNil, isFunction),
       caseWhen: complement(isNil),
       sinkNames: isArrayOf(isString),
-      on: or(isString, isFunction)
+      on: either(isString, isFunction)
     }
     const signatureErrorMessages = {
       eqFn: 'eqFn property, when not undefined, must be a function.',
@@ -91,6 +64,15 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     const signatureCheck = checkSignature(settings, signature, signatureErrorMessages)
 
     return hasPassedSignatureCheck(signatureCheck) ? true : signatureCheck
+  }
+
+  function hasAtLeastOneChildComponent(childrenComponents) {
+    return childrenComponents &&
+    isArray(childrenComponents) &&
+    childrenComponents.length >= 1 ?
+        true :
+        ''
+
   }
 
   /**
@@ -131,34 +113,27 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
    * sources[sourceName]
    * - Cf. Signature 1 for the meaning of the rest of parameters
    *
+   * Contracts:
+   * 1. Must have at least 1 child component (can't be switching to nothingness)
    */
   function makeAllSinks(sources, settings, childrenComponents) {
-    // TODO : write the program for 1-5
-    // 1. Assert and determine the type of signature
-    // 2. Get the arguments
     // 3. Check settings and sources contracts with the passed arguments,
     // i.e. before merging. This is done to prevent pollution from
     // properties inherited from parent
-    // source contracts :
-    // - if signature 2, sources[sourceName] must be an observable
     // - if signature 1, the return value of the function must be an observable
     // settings contracts :
     // mandatory : on, caseWhen (type to check depending on signature detected)
-    //
-    // 4. set default values for optional arguments
-    // eqFn is === if not present
-    // 5. Harmonize the signature (the signature 2 -> signature by  setting
-    // the relevant function)
-    // -> guard$, eqFn, caseWhen, sinkNames
 
     // debug info
     console.groupCollapsed('Switch component > makeAllSinks')
-    console.debug('sources, settings, childrenComponents', sources, settings, childrenComponents);
+    console.debug('sources, settings, childrenComponents', sources, settings, childrenComponents)
 
     // TODO : analyze whether merge inner settings etc. into the
     // settings passed in AllSinks...
 
-    assertContract(isSwitchSettings, [settings], 'Invalid switch settings!')
+    assertContract(isSwitchSettings, [settings], 'Invalid switch' +
+        ' component settings!')
+    assertContract(hasAtLeastOneChildComponent, [childrenComponents], 'switch combinator must at least have one child component to switch to!')
 
     let {eqFn, caseWhen, sinkNames, on} = settings
 
@@ -167,23 +142,32 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
       {'sourceName': isString}
     ])
     let {guard$, sourceName, _index} = overload
+    let switchSource
 
     if (overload._index === 1) {
       // Case : overload `settings.on :: SourceName`
-      assertContract(isSource, [sources[sourceName]],
+      switchSource = sources[sourceName]
+      assertContract(isSource, [switchSource],
           `An observable with name ${sourceName} could not be found in sources`)
+    }
+    if (overload._index === 0) {
+      // Case : overload `settings.on :: SourceName`
+      switchSource = guard$(sources, settings)
+      assertContract(isSource, [switchSource],
+          `The function used for conditional switching did not return an observable!`)
     }
 
     // set default values for optional properties
-    sourceName = defaultsTo(sourceName, cfg.defaultSwitchComponentSourceName)
     eqFn = defaultsTo(eqFn, cfg.defaultEqFn)
-    guard$ = defaultsTo(guard$, sources => sources[sourceName])
 
-    const shouldSwitch$ = guard$
+    const shouldSwitch$ = switchSource
         .map(x => eqFn(caseWhen, x))
-        .filter(x => x)
+    // TODO : should I filter out the transition f->f??
+    // TODO : mergeDOMSinks in that case should be a merge, not a combineLatest
+    // as cases are/should be mutually exclusive
 
     const cachedSinks$ = shouldSwitch$
+        .filter(x => x)
         .map(function (_) {
           const mergedChildrenComponentsSinks = m(
               {},
@@ -194,50 +178,60 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
         .share() // multicasted to all sinks
 
     function makeSwitchedSinkFromCache(sinkName) {
-      return function makeSwitchedSinkFromCache(_, cachedSinks) {
+      return function makeSwitchedSinkFromCache(isMatchingCase, cachedSinks) {
         var cached$, preCached$, prefix$
+        if (isMatchingCase) {
+          // Case : the switch source emits a value corresponding to the
+          // configured case in the component
 
-        // Case : matches configured value
-        if (cachedSinks[sinkName] != null) {
-          // Case : the component produces a sink with that name
-          // This is an important case, as parent can have children
-          // nested at arbitrary levels, with either :
-          // 1. sinks which will not be retained (not in `sinkNames`
-          // settings)
-          // 2. or no sinks matching a particular `sinkNames`
-          // Casuistic 1. is taken care of automatically as we only
-          // construct the sinks in `sinkNames`
-          // Casuistic 2. is taken care of thereafter
+          // Case : matches configured value
+          if (cachedSinks[sinkName] != null) {
+            // Case : the component produces a sink with that name
+            // This is an important case, as parent can have children
+            // nested at arbitrary levels, with either :
+            // 1. sinks which will not be retained (not in `sinkNames`
+            // settings)
+            // 2. or no sinks matching a particular `sinkNames`
+            // Casuistic 1. is taken care of automatically as we only
+            // construct the sinks in `sinkNames`
+            // Casuistic 2. is taken care of thereafter
 
-          prefix$ = sinkName === 'DOM' ?
-              // Case : DOM sink
-              // actually any sink which is merged with a `combineLatest`
-              // but here by default only DOM sinks are merged that way
-              // Because the `combineLatest` blocks till all its sources
-              // have started, and that behaviour interacts badly with
-              // route changes desired behavior, we forcibly emits a `null`
-              // value at the beginning of every sink.
-              $.of(null) :
-              // Case : Non-DOM sink
-              // Non-DOM sinks are merged with a simple `merge`, there
-              // is no conflict here, so we just return nothing
-              $.empty()
+            prefix$ = sinkName === 'DOM' ?
+                // Case : DOM sink
+                // actually any sink which is merged with a `combineLatest`
+                // but here by default only DOM sinks are merged that way
+                // Because the `combineLatest` blocks till all its sources
+                // have started, and that behaviour interacts badly with
+                // route changes desired behavior, we forcibly emits a `null`
+                // value at the beginning of every sink.
+                $.of(null) :
+                // Case : Non-DOM sink
+                // Non-DOM sinks are merged with a simple `merge`, there
+                // is no conflict here, so we just return nothing
+                $.empty()
 
-          preCached$ = cachedSinks[sinkName]
-              .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
-              .finally(_ => {
-                console.log(`sink ${sinkName} terminating due to route change`)
-              })
+            preCached$ = cachedSinks[sinkName]
+                .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
+                .finally(_ => {
+                  console.log(`sink ${sinkName} terminating due to route change`)
+                })
 
-          cached$ = $.concat(prefix$, preCached$)
-          // TODO : DRY refactor not to repeat what is already in the router
+            cached$ = $.concat(prefix$, preCached$)
+            // TODO : DRY refactor not to repeat what is already in the router
+          }
+          else {
+            // Case : the component does not have any sinks with the
+            // corresponding sinkName
+            cached$ = $.empty()
+          }
         }
         else {
-          // Case : the component does not have any sinks with the
-          // corresponding sinkName
-          cached$ = $.empty()
+          // Case : the switch source emits a value NOT corresponding to the
+          // configured case in the component
+          console.log('isMatchingCase is null!!! no match for this component on' +
+              ' this route!')
+          cached$ = sinkName === 'DOM' ? $.of(null) : $.empty()
         }
-
         return cached$
       }
     }
@@ -250,6 +244,8 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
         ).switch()
       }
     }
+
+    console.groupEnd()
 
     return mergeAll(map(makeSwitchedSink, sinkNames))
   }

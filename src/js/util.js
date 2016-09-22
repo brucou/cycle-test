@@ -11,7 +11,7 @@ function require_util(Rx, $, R, Sdom) {
   const {h, div, span} = Sdom
   const {
       mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq,
-      merge, reduce, all, either, clone, map, values
+      merge, reduce, all, either, clone, map, values, any
   } = R
   const mapIndexed = R.addIndex(R.map)
   const deepMerge = function deepMerge(a, b) {
@@ -100,7 +100,7 @@ function require_util(Rx, $, R, Sdom) {
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
     _settings = _settings || {}
-    console.groupCollapsed('m - ' + _settings.trace)
+    console.groupCollapsed('Utils > m')
     console.log('componentDef, _settings, children', componentDef, _settings, children)
     // check signature
     const mSignature = [
@@ -124,7 +124,7 @@ function require_util(Rx, $, R, Sdom) {
       console.groupEnd()
 
       return function mComponent(sources, innerSettings) {
-        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ':')
+        console.groupCollapsed('m\'ed component > makeAllSinks > Entry')
         console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
 
         assertSourcesContracts(sources, sourcesContract)
@@ -152,7 +152,7 @@ function require_util(Rx, $, R, Sdom) {
     else {
       console.groupEnd()
       return function m(sources, innerSettings) {
-        console.groupCollapsed('m component function:')
+        console.groupCollapsed('m\'ed component > Entry')
         console.log('sources, innerSettings', sources, innerSettings)
 
         innerSettings = innerSettings || {}
@@ -174,23 +174,25 @@ function require_util(Rx, $, R, Sdom) {
             mergedSettings
         )
 
-        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ' : makeOwnSinks:')
+        console.groupCollapsed('m\'ed component > makeOwnSinks')
         console.log('extendedSources, localSettings', extendedSources, localSettings)
         const ownSinks = makeOwnSinks(extendedSources, localSettings)
-        if (!ownSinks) console.warn('ownSinks : null!!!')
+        if (!ownSinks) console.warn('makeOwnSinks : null!!!')
         console.groupEnd()
 
-        console.group('m - computing children sinks')
+        console.group('m\'ed component > computing children sinks')
         const childrenSinks = map(
             childComponent => childComponent(extendedSources, localSettings),
             children
         )
-        console.groupEnd('m - computing children sinks')
+        console.groupEnd('m\'ed component > computing children sinks')
+
         assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
-        assertContract(isArrayOptSinks, [childrenSinks], 'ownSinks must be a hash of observable sink')
+        assertContract(isArrayOptSinks, [childrenSinks], 'childrenSinks must' +
+            ' be an array of sinks')
 
         // merge the sinks from children and one-s own...
-        console.groupCollapsed('m router component function - ' + _settings.trace || "" + ' : mergeSinks :')
+        console.groupCollapsed('m\'ed component > mergeSinks')
         console.log('ownSinks, childrenSinks, localSettings', ownSinks, childrenSinks, localSettings)
         const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
         console.groupEnd()
@@ -300,12 +302,27 @@ function require_util(Rx, $, R, Sdom) {
    * @param obj
    * @param {Object.<string, Predicate>} signature
    * @param {Object.<string, string>} signatureErrorMessages
+   * @param {Boolean} strict
    * @returns {SignatureCheck}
    */
-  function checkSignature(obj, signature, signatureErrorMessages) {
-    return mapObjIndexed((value, key) => {
-      return signature[key](obj) ? "" : signatureErrorMessages[key]
+  function checkSignature(obj, signature, signatureErrorMessages, isStrict) {
+    let arrMessages = []
+    let strict = defaultsTo(isStrict, false)
+
+    mapObjIndexed((value, property) => {
+      if (!(property in signature)) {
+        // Case : the object has a property for which no contract is set up
+        if (strict) {
+          // Case : if strict is true, that means that the object should not
+          // have that property
+          arrMessages.push(`Object cannot contain a property called ${property}`)
+        }
+      } else if (!signature[property](value)) {
+        arrMessages.push(signatureErrorMessages[property])
+      }
     }, obj)
+
+    return arrMessages
   }
 
   /**
@@ -322,22 +339,41 @@ function require_util(Rx, $, R, Sdom) {
     let result = {}
     let index = 0
 
-    any(overload => mapObjIndexed((predicate, property) => {
-      const predicateEval = predicate(obj[property])
+    overloads.some(overload => {
+      // can only be one property
+      const property = keys(overload)[0]
+      const predicate = values(overload)[0]
+      const predicateEval = predicate(obj)
+
       if (predicateEval) {
-        result[property] = obj[property]
+        result[property] = obj
         result._index = index
       }
       index++
 
       return predicateEval
-    }, overload), overloads)
+    })
+    return result
+
+    // TODO : mapObjIndex must be processed after to return true or false...
+    any(overload => {
+      mapObjIndexed((predicate, property) => {
+        const predicateEval = predicate(obj)
+        if (predicateEval) {
+          result[property] = obj
+          result._index = index
+        }
+        index++
+
+        return predicateEval
+      }, overload)
+    }, overloads)
 
     return result
   }
 
   function defaultsTo(obj, defaultsTo) {
-    if (!obj) return defaultsTo
+    return !obj ? defaultsTo : obj
   }
 
   /**
@@ -428,7 +464,7 @@ function require_util(Rx, $, R, Sdom) {
     return isFunction(obj.subscribe)
   }
 
-  function isSource(obj){
+  function isSource(obj) {
     return isObservable(obj)
   }
 
@@ -440,7 +476,7 @@ function require_util(Rx, $, R, Sdom) {
     // are initialized in the drivers, and should be separated from
     // `sources`. `sources` could then have an homogeneous type which
     // could be checked properly
-    return complement(isNil(obj))
+    return !isNil(obj)
   }
 
   function isOptSinks(obj) {
@@ -449,7 +485,7 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   function isArrayOptSinks(arrSinks) {
-    return map(isOptSinks, arrSinks)
+    return all(isOptSinks, arrSinks)
   }
 
   function assertSourcesContracts(sources, sourcesContract) {
@@ -496,7 +532,6 @@ function require_util(Rx, $, R, Sdom) {
   function removeNullsFromArray(arr) {
     return reject(isNil, arr)
   }
-
 
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
@@ -706,12 +741,13 @@ function require_util(Rx, $, R, Sdom) {
     makeDivVNode: makeDivVNode,
     assertSignature: assertSignature,
     assertContract: assertContract,
-    hasPassedSignatureCheck : hasPassedSignatureCheck,
-    checkSignature : checkSignature,
-    unfoldObjOverload : unfoldObjOverload,
+    hasPassedSignatureCheck: hasPassedSignatureCheck,
+    checkSignature: checkSignature,
+    unfoldObjOverload: unfoldObjOverload,
     projectSinksOn: projectSinksOn,
     getSinkNamesFromSinksArray: getSinkNamesFromSinksArray,
-    defaultsTo : defaultsTo,
+    removeNullsFromArray: removeNullsFromArray,
+    defaultsTo: defaultsTo,
     isNullableObject: isNullableObject,
     isUndefined: isUndefined,
     isFunction: isFunction,
@@ -722,7 +758,7 @@ function require_util(Rx, $, R, Sdom) {
     isArray: isArray,
     isArrayOf: isArrayOf,
     isObservable: isObservable,
-    isSource : isSource,
+    isSource: isSource,
     isOptSinks: isOptSinks,
   }
 }
