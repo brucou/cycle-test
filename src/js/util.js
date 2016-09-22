@@ -264,6 +264,7 @@ function require_util(Rx, $, R, Sdom) {
     return !hasFailed
   }
 
+//df
   /**
    * Test against a predicate, and throws an exception if the predicate
    * is not satisfied
