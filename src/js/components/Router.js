@@ -115,6 +115,10 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * - sinkNames : the list of sinks (names) which must be activated in
    * response to the matching route
    *
+   * Note that the DOM sink will emit null on some specific circumstances,
+   * hence the component receiving the routed DOM sink must plan for that
+   * case accordingly. That means DOM :: Observable<VNode>|Null
+   *
    * @param {Sources} sources
    * @param {{route: string, sinkNames: Array<string>, trace: string}} settings
    * @param {Array<Component>} childrenComponents
@@ -270,13 +274,3 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
     computeSinks: computeSinks
   }
 }
-
-// Routing parameters
-// Parameters are passed to the children via the `onRoute$` local source
-// That source emits anytime the route changes :
-// - null, if the new route does not match the `route` regexp setting
-// - {}, if there is no params to be passed
-// - Hash * (i.e. Object) if there are parameters to be extracted from the regexp
-// Hence the children will have to filter it again null values before using it
-// As such those parameters are visible to all children down the tree, until
-// there is another routing component which overrides it

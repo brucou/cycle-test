@@ -3,116 +3,91 @@
  *
  * A. Testing strategy
  * Main case tests must cover HaveParent x Signature x Children
- * That makes for 2 x 2 x 3 potential tests:
- * - HaveParent : whether the component is used under a parent or at top level
+ * That makes for 2 x 3 potential tests:
  * - Signature : whether Signature 1 or 2
  * - Children : whether the component has no children, 1 child, or several
  * children (We assume here that if the tests pass for two children, they will
  * pass for any number of children > 2)
  *
- * We will reduce the number of tests to perform to: 2 x 2 x (2x2 > 2 ?1 :2) by:
- * - skipping the tests with 1 child, by assuming furthermore that if the
- * tests for several children are passed, the tests for 1 child is passed.
- * - assuming that the behaviour linked to the children argument is
+ * We will reduce the number of tests to perform to: 3 x (3 > 2 ?1 :2) by:
+ * - assuming that the behaviour linked to the signature is
  * independent of the behaviour linked to the other arguments. Hence that
  * behaviour can be tested 'for free' on the way to testing expected
  * behaviour under the rest of the arguments.
  *
- * We hence remain with 4 tests to perform:
- * - (No parent, Parent) x (signature1, signature2)
+ * We hence remain with 3 tests to perform:
+ * - (0,1,2) children
  * which will include along the way:
- * - (no children, 2 children)
- * - (default for optional properties, configured optional properties)
+ * - default for optional properties (eqFn)
+ * - signature 1 and 2
  *
  * B. Test scenarii
- * TODO : Detail the 2 x 2
  */
-
-// TODO : documentation : Note that the switch does not incorporate a
-// distinctUntilChanged logic, i.e. transitions f -> f are real (just f in
-// the case of routing)
-// So the switching logic is for each incoming value of switch source
-// matching the component case, activate this component. Even if component was
-// already activated because of the previous value of switch source, it is
-// still reactivated.
-// Should ponder over whether that is a desirable logic or not
-// For authentification, auth values should not repeat themselves (or they
-// do if you authentificate twice???) Interesting edge case
 
 define(function (require) {
   const U = require('util')
-  const R = require('ramda')
   const Rx = require('rx')
   const Switch = require('components/Switch')
   const Sdom = require('cycle-snabbdom')
-  const Sdom2html = require('snabbdom-to-html').toHTML
-  const tutils = require('test_util')
+  const runTestScenario = require('test_util').runTestScenario
 
   const $ = Rx.Observable
   const {h, div, span} = Sdom
-  const runTestScenario = tutils.runTestScenario
-  const m = U.m
-  const removeNullsFromArray = U.removeNullsFromArray
-  const removeEmptyVNodes = U.removeEmptyVNodes
-  const flatten = R.flatten
-  const SwitchCase = Switch.SwitchCase
+  const {m}= U
+  const {SwitchCase, Case}= Switch
 
   QUnit.module("Testing Switch component", {})
 
-  QUnit.skip("main cases - no parent - no children - switch on source", function exec_test(assert) {
+  QUnit.test("edge cases - no children - switch on source", function exec_test(assert) {
 
-        const mComponent = m(Switch,
-            {
-              on: 'switch$',
-              sinkNames: ['DOM', 'a', 'b'],
-              caseWhen: true
-            },
-            [])
+    const mComponent = m(SwitchCase, {
+      on: 'switch$',
+      sinkNames: ['DOM', 'a', 'b']
+    }, [m(Case, {caseWhen: true}, [])])
 
-        const inputs = [
-          {DOM1: {diagram: '-a--b--c--d--e--f--a'}},
-          {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d'}},]
+    const inputs = [
+      {DOM1: {diagram: '-a--b--c--d--e--f--a'}},
+      {DOM2: {diagram: '-a-b-c-d-e-f-abb-c-d'}},]
 
-        /** @type TestResults */
-        const expected = {
-          DOM: {
-            outputs: [],
-            successMessage: 'sink DOM produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          a: {
-            outputs: [],
-            successMessage: 'sink a produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-          b: {
-            outputs: [],
-            successMessage: 'sink b produces the expected values',
-            analyzeTestResults: analyzeTestResults,
-            transformFn: undefined,
-          },
-        }
+    /** @type TestResults */
+    const expected = {
+      DOM: {
+        outputs: [],
+        successMessage: 'sink DOM produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      a: {
+        outputs: [],
+        successMessage: 'sink a produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+      b: {
+        outputs: [],
+        successMessage: 'sink b produces the expected values',
+        analyzeTestResults: analyzeTestResults,
+        transformFn: undefined,
+      },
+    }
 
-        function analyzeTestResults(actual, expected, message) {
-          assert.deepEqual(actual, expected, message)
-          done()
-        }
+    function analyzeTestResults(actual, expected, message) {
+      assert.deepEqual(actual, expected, message)
+      done()
+    }
 
-        const testFn = mComponent
+    const testFn = mComponent
 
-        assert.throws(function () {
-          runTestScenario(inputs, expected, testFn, {
-            tickDuration: 5,
-            waitForFinishDelay: 30
-          })
-        }, /contract/, 'Throws if the switch combinator is called with no' +
-            ' child component to switch to')
-      }
-  )
+    assert.throws(function () {
+      runTestScenario(inputs, expected, testFn, {
+        tickDuration: 5,
+        waitForFinishDelay: 30
+      })
+    }, /contract/, 'Throws if the switch combinator is called with no' +
+        ' child component to switch to')
+  })
 
-  QUnit.test("main cases - no parent - 2 children - switch on source", function exec_test(assert) {
+  QUnit.test("main cases - 1 child - switch on source", function exec_test(assert) {
     let done = assert.async(3)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -134,14 +109,13 @@ define(function (require) {
       }
     }
 
-    const mComponent = m(SwitchCase, {}, [
-      m(Switch,
-          {
-            on: 'switch$',
-            sinkNames: ['DOM', 'a', 'b'],
-            caseWhen: true
-          },
-          [childComponent1, childComponent2])])
+    const mComponent = m(SwitchCase, {
+      on: 'switch$',
+      sinkNames: ['DOM', 'a', 'b'],
+      eqFn: (a,b) => a === b
+    }, [
+      m(Case, {caseWhen: true}, [childComponent1, childComponent2])
+    ])
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a'}},
@@ -174,17 +148,17 @@ define(function (require) {
 
     const vNodes = [
 //      null, //t. -> starts with null
-      null, // transition -> f
+//      null, // transition -> f
 //      null, //t. -> starts with null
 //      null, //t. -> starts with null
       makeVNode('c', 'd'),
 //      null, //t. -> starts with null
 //      null, //t. -> starts with null
 //      null, //t. -> starts with null
-      null, // transition -> f
+//      null, // transition -> f
       // transition -> f // Is that good??? Yes it is filtered in
       // utils.mergeChildrenIntoParentDOM
-      null,
+//      null,
 //      null, //t. -> starts with null
       //      makeVNode('c','e'), // won't happen because combineLatest
       // (a,b) needs a first value for both a and b to emits its first value
@@ -243,7 +217,7 @@ define(function (require) {
 
   })
 
-  QUnit.skip("main cases - parent - 2 children - switch on condition", function exec_test(assert) {
+  QUnit.test("main cases - 2 children - switch on condition", function exec_test(assert) {
     let done = assert.async(3)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -274,60 +248,12 @@ define(function (require) {
       }
     }
 
-    // TODO put a parent here
-    const mComponent = m({
-      mergeSinks: {
-        DOM: function mergeDomSwitchedSinks(ownSink, childrenDOMSink, settings) {
-          const allSinks = flatten([ownSink, childrenDOMSink])
-          const allDOMSinks = removeNullsFromArray(allSinks)
-          return $.zip(allDOMSinks) //!! passes an array
-              .tap(console.warn.bind(console, 'Switch.specs' +
-                  ' > mergeDomSwitchedSinks > zip'))
-              // Most values will be null
-              // All non-null values correspond to a match
-              // In the degenerated case, all values will be null (no match
-              // at all)
-              .map(arrayVNode => {
-                const _arrayVNode = removeNullsFromArray(arrayVNode)
-                switch (_arrayVNode.length) {
-                  case 0 :
-                    return null
-                  case 1 :
-                    return _arrayVNode[0]
-                  default :
-                    return div(_arrayVNode)
-                }
-              })
-
-          let _arrayVNode = removeEmptyVNodes(removeNullsFromArray(arrayVNode))
-          assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
-              ' stream VNode objects! Got ' + _arrayVNode)
-
-          // TODO : I should pass the childrenSinks in the form
-          // {sinkName: [ProjectedChildrenSinks]}, and same form for the parent
-          // and update the tests
-          // TODO : add a utility function which adds the parent on top of the
-          // children
-          // TODO : for switch try with a normal merge for all sinkNames
-          // but If I do a merge normal on DOM, I don't need to start with null
-          // anymore??, YES I DO : be aware that the merge is only at top level,
-          // the lower level (case) is with combineLatest on the children
-          // NO : try with normal merge and no null !!
-        }
-      }
-    }, {}, [
-      m(Switch, {
-        index: 0,
-        on: 'sweatch$',
-        sinkNames: ['DOM', 'a', 'b'],
-        caseWhen: true
-      }, [childComponent1, childComponent2]),
-      m(Switch, {
-        index: 0,
-        on: 'sweatch$',
-        sinkNames: ['DOM', 'a', 'b'],
-        caseWhen: false
-      }, [childComponent3])
+    const mComponent = m(SwitchCase, {
+      on: (sources,settings) => sources.sweatch$,
+      sinkNames: ['DOM', 'a', 'b']
+    }, [
+      m(Case, {caseWhen: true}, [childComponent1, childComponent2]),
+      m(Case, {caseWhen: false}, [childComponent3])
     ])
 
     const inputs = [
@@ -358,9 +284,7 @@ define(function (require) {
             h('span', {}, `Component 1 : ${x}`),
             h('span', {}, `Component 2 : ${y}`),
           ]) :
-          div([
-            h('span', {}, `Component 3 : ${z}`)
-          ])
+          h('span', {}, `Component 3 : ${z}`)
     }
 
     const vNodes = [
@@ -369,9 +293,9 @@ define(function (require) {
       //      makeVNode('c','e'), // won't happen because combineLatest
       // (a,b) needs a first value for both a and b to emits its first value
       //      makeVNode('d','e'),
-      makeVNode('f', 'b'),
       makeVNode('', '', 'f'),
       makeVNode('', '', 'a'),
+      makeVNode('f', 'b'),
       makeVNode('f', 'c'),
       makeVNode('a', 'c'),
       makeVNode('a', 'd'),
@@ -422,13 +346,10 @@ define(function (require) {
     const testFn = mComponent
 
     runTestScenario(inputs, expected, testFn, {
-      tickDuration: 5,
+      tickDuration: 3,
       waitForFinishDelay: 30
     })
 
-  })
-
-  QUnit.skip("main cases - parent - no children - switch on condition", function exec_test(assert) {
   })
 
 })

@@ -1,15 +1,3 @@
-// SwitchSettings :: SwitchOnCondition | SwitchOnSource
-// SwitchOnCondition :: Record {Sources -> Settings -> Source, CaseWShen, Opt
-// eqFn}
-// SwitchOnSource :: Record {SourceName, CaseWhen, Opt CompareFn}
-//
-// mSwitch :: SwitchSettings -> [Component] -> Component
-// Be careful that the inheritance of settings down the chain can pollute
-//  children... So I need to check the presence of the passed settings before
-// merge to check that mandatory properties are passed and not inherited
-// unexpectedly from an ancestor
-// TODO : typings to add
-
 define(function (require) {
   const U = require('util')
   const R = require('ramda')
@@ -17,9 +5,8 @@ define(function (require) {
   const $ = Rx.Observable
   const Sdom = require('cycle-snabbdom')
 
-  // TODO : to put all config properties in one file??
   // CONFIG
-  const DEFAULT_SWITCH_COMPONENT_SOURCE_NAME = 'switch$'
+  const DEFAULT_SWITCH_COMPONENT_SOURCE_NAME = 'switch$' // NOT USED
   const defaultEqFn = function swichCptdefaultEqFn(a, b) {
     return a === b
   }
@@ -36,7 +23,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   const {
       assertSignature, assertContract, checkSignature, hasPassedSignatureCheck,
       isString, isArray, isArrayOf, isFunction, defaultsTo, isSource,
-      unfoldObjOverload, m, removeNullsFromArray
+      unfoldObjOverload, m, removeNullsFromArray, removeEmptyVNodes, isVNode
   } = U
   const {
       forEach, all, any, map, mapObjIndexed, reduce, keys, values,
@@ -44,6 +31,20 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
       either, isNil, omit, path, complement, or
   } = R
   const mapIndexed = R.addIndex(R.map)
+
+  // Type checking typings
+  /**
+   * @typedef {function(Sources,Settings):Source} SwitchOnCondition
+   */
+  /**
+   * @typedef {SourceName} SwitchOnSource
+   */
+  /**
+   * @typedef {Object} SwitchCaseSettings
+   * @property {SwitchOnCondition | SwitchOnSource} on
+   * @property {Array<SinkName>} sinkNames
+   * @property {?function(*,*): Boolean} eqFn
+   */
 
   //////
   // Helper functions
@@ -68,73 +69,19 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   function hasAtLeastOneChildComponent(childrenComponents) {
     return childrenComponents &&
     isArray(childrenComponents) &&
-    childrenComponents.length >= 1 ?
-        true :
-        ''
-
+    childrenComponents.length >= 1 ? true : ''
   }
 
-  /**
-   * The switch combinator activates a component conditionally depending on
-   * whether a condition is satisfied. Note that the condition is evaluated
-   * every time there is an incoming value on the relevant sources. If it is
-   * necessary to implement a logic by which, the component activation
-   * should only trigger on **changes** of the incoming value, that logic
-   * can be implemented by using the appropriate combinator signature.
-   * When the condition is no longer satisfied, the previously activated
-   * component is deactivated automatically :
-   * - DOM sink emits null and terminates
-   * - Non-DOM sinks are empty
-   * The exception in treatment for the DOM sink is to enable the component to
-   * work well under a parent which merges its children sinks with a
-   * `combineLatest`-like operator. As this operator emits value only when
-   * every one of its sources have emitted at least one value, we have to emit
-   * a value for each child to avoid blocking unduly the parent DOM merging.
-   *
-   * Signature 1: SwitchOnCondition -> [Component] -> Component
-   * - settings.on :: Sources -> Settings -> Source
-   * The function passed as parameter is returning a source observable whose
-   * values will be used for the conditional switching. Logi
-   * - settings.sinkNames :: [SinkName]
-   * This is an array with the names of the sinks to be constructed. This is
-   * mandatory as we can't know in advance which sinks to produce
-   * - settings.caseWhen :: *
-   * An object which will activate the switch whenever the source observable
-   * returned by the `on` parameter emits that object
-   * - settings.eqFn :: * -> * -> Boolean
-   * A predicate which returns true if both parameters are considered equal.
-   * This parameter defaults to `===`
-   *
-   * Signature 2: SwitchOnSource -> [Component] -> Component
-   * - settings.on :: SourceName
-   * A string which is the source name whose values will be used for the
-   * conditional activation of the component. The sources used will be
-   * sources[sourceName]
-   * - Cf. Signature 1 for the meaning of the rest of parameters
-   *
-   * Contracts:
-   * 1. Must have at least 1 child component (can't be switching to nothingness)
-   */
   function computeSinks(makeOwnSinks, childrenComponents, sources, settings) {
-    // 3. Check settings and sources contracts with the passed arguments,
-    // i.e. before merging. This is done to prevent pollution from
-    // properties inherited from parent
-    // - if signature 1, the return value of the function must be an observable
-    // settings contracts :
-    // mandatory : on, caseWhen (type to check depending on signature detected)
+    // TODO (later): Be careful that the inheritance of settings down the
+    // chain can pollute children... So I need to check the presence of the
+    // passed settings before merge to check that mandatory properties are
+    // passed and not inherited unexpectedly from an ancestor.
+    // This will have to be done via settingsContracts at SwitchCase level
 
     // debug info
-    console.groupCollapsed('Switch component > makeAllSinks')
+    console.groupCollapsed('Switch component > computeSinks')
     console.debug('sources, settings, childrenComponents', sources, settings, childrenComponents)
-
-    // TODO : a switch has to be wrapped into a switcher:
-    // TODO : merge function is merge, not combineLatest!!
-    // a switxh MUST have only one branch true for any given switch value
-    // API : Switch({on: source$|Predicate},[Case({when:value})])
-    // but inside the Case component, merge is combineLatest as always
-
-    // TODO : analyze whether merge inner settings etc. into the
-    // settings passed in AllSinks...
 
     assertContract(isSwitchSettings, [settings], 'Invalid switch' +
         ' component settings!')
@@ -167,9 +114,6 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
 
     const shouldSwitch$ = switchSource
         .map(x => eqFn(caseWhen, x))
-    // TODO : should I filter out the transition f->f??
-    // TODO : mergeDOMSinks in that case should be a merge, not a combineLatest
-    // as cases are/should be mutually exclusive
 
     const cachedSinks$ = shouldSwitch$
         .filter(x => x)
@@ -211,7 +155,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
                 // value at the beginning of every sink.
                 // !! Don't start with null in case of switching IN, only
                 // when OUT
-                $.empty() : //$.of(null) : // $.empty():
+                $.empty() :
                 // Case : Non-DOM sink
                 // Non-DOM sinks are merged with a simple `merge`, there
                 // is no conflict here, so we just return nothing
@@ -257,6 +201,69 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     return mergeAll(map(makeSwitchedSink, sinkNames))
   }
 
+  /**
+   * Usage : m(SwitchCase, ::SwitchCaseSettings, ::Array<CaseComponent>)
+   * Example : cf. specs
+   *   > const mComponent = m(SwitchCase, {
+   *   >    on: (sources,settings) => sources.sweatch$,
+   *   >    sinkNames: ['DOM', 'a', 'b']
+   *   >  }, [
+   *   > m(Case, {caseWhen: true}, [childComponent1, childComponent2]),
+   *   > m(Case, {caseWhen: false}, [childComponent3])
+   *   > ])
+   *
+   * The switch combinator activates a component conditionally depending on
+   * whether a condition on a 'switched' source stream is satisfied. Note
+   * that the condition is evaluated every time there is an incoming value
+   * on the relevant sources.
+   * If it is necessary to implement a logic by which, the component activation
+   * should only trigger on **changes** of the incoming value, that logic
+   * could be implemented with a `distinctUntilChanged`.
+   * When the condition is no longer satisfied, the previously activated
+   * component is deactivated automatically :
+   * - DOM sink emits null and terminates
+   * - Non-DOM sinks are empty
+   * DOM sinks are treated differently because the DOM is a behaviour
+   * (continuous value), not an event, so we need to update to null its value
+   * when there is no longer a match. i.e. match => DOM, no match => Null
+   *
+   * Signature 1: SwitchOnCondition -> [Component] -> Component
+   * - settings.on :: Sources -> Settings -> Source
+   * The function passed as parameter is returning a source observable whose
+   * values will be used for the conditional switching.
+   * - settings.sinkNames :: [SinkName]
+   * This is an array with the names of the sinks to be constructed. This is
+   * mandatory as we can't know in advance which sinks to produce
+   * - settings.eqFn :: * -> * -> Boolean
+   * A predicate which returns true if both parameters are considered equal.
+   * This parameter defaults to `===`
+   *
+   * Signature 2: SwitchOnSource -> [Component] -> Component
+   * - settings.on :: SourceName
+   * A string which is the source name whose values will be used for the
+   * conditional activation of the component. The sources used will be
+   * sources[sourceName]
+   * - Cf. Signature 1 for the meaning of the rest of parameters
+   *
+   * Contracts :
+   * - SwitchCase combinator must have at least one child component
+   * - Case combinator must have at least one child component
+   * - Conditions should be defined such that there is for any given value
+   * of the 'switched' stream only one matching component
+   *   - If that is not the case, the last matching component will be the one
+   *   prevailing. It is however how to predict which of the components will
+   *   be the last in a given configuration
+   * - on, sinkNames, caseWhen are mandatory
+   *
+   * Case component
+   * - settings.caseWhen :: *
+   * An object which will activate the switched-to component whenever the source
+   * observable returned by the `on` parameter emits that object
+   *
+   * Contracts :
+   * - caseWhen is mandatory
+   *
+   */
   const SwitchCase = {
     mergeSinks: {
       DOM: function mergeDomSwitchedSinks(ownSink, childrenDOMSink, settings) {
@@ -264,38 +271,20 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
         const allDOMSinks = removeNullsFromArray(allSinks)
 
         // NOTE : zip rxjs does not accept only one argument...
-        if (allDOMSinks.length === 1) {
-          return allDOMSinks[0]
-        }
-        else {
-          return $.zip(allDOMSinks) //!! passes an array
-              .tap(console.warn.bind(console, 'Switch.specs' +
-                  ' > mergeDomSwitchedSinks > zip'))
-              // Most values will be null
-              // All non-null values correspond to a match
-              // In the degenerated case, all values will be null (no match
-              // at all)
-              .map(arrayVNode => {
-                const _arrayVNode = removeEmptyVNodes(removeNullsFromArray(arrayVNode))
-                assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
-                    ' stream VNode objects! Got ' + _arrayVNode)
-
-                switch (_arrayVNode.length) {
-                  case 0 :
-                    return null
-                  case 1 :
-                    return _arrayVNode[0]
-                  default :
-                    return div(_arrayVNode)
-                }
-              })
-        }
+        return $.merge(allDOMSinks) //!! passes an array
+            .tap(console.warn.bind(console, 'Switch.specs' +
+                ' > mergeDomSwitchedSinks > merge'))
+            .filter(Boolean)
+        // Most values will be null
+        // All non-null values correspond to a match
+        // In the degenerated case, all values will be null (no match
+        // at all)
       }
     }
   }
 
   return {
-    computeSinks: computeSinks,
+    Case: {computeSinks: computeSinks},
     SwitchCase: SwitchCase
   }
 }
