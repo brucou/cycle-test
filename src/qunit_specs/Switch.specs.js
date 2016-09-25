@@ -41,7 +41,7 @@
 
 define(function (require) {
   const U = require('util')
-  const R = require('ramda');
+  const R = require('ramda')
   const Rx = require('rx')
   const Switch = require('components/Switch')
   const Sdom = require('cycle-snabbdom')
@@ -52,6 +52,10 @@ define(function (require) {
   const {h, div, span} = Sdom
   const runTestScenario = tutils.runTestScenario
   const m = U.m
+  const removeNullsFromArray = U.removeNullsFromArray
+  const removeEmptyVNodes = U.removeEmptyVNodes
+  const flatten = R.flatten
+  const SwitchCase = Switch.SwitchCase
 
   QUnit.module("Testing Switch component", {})
 
@@ -108,7 +112,7 @@ define(function (require) {
       }
   )
 
-  QUnit.skip("main cases - no parent - 2 children - switch on source", function exec_test(assert) {
+  QUnit.test("main cases - no parent - 2 children - switch on source", function exec_test(assert) {
     let done = assert.async(3)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -130,13 +134,14 @@ define(function (require) {
       }
     }
 
-    const mComponent = m(Switch,
-        {
-          on: 'switch$',
-          sinkNames: ['DOM', 'a', 'b'],
-          caseWhen: true
-        },
-        [childComponent1, childComponent2])
+    const mComponent = m(SwitchCase, {}, [
+      m(Switch,
+          {
+            on: 'switch$',
+            sinkNames: ['DOM', 'a', 'b'],
+            caseWhen: true
+          },
+          [childComponent1, childComponent2])])
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a'}},
@@ -168,19 +173,19 @@ define(function (require) {
     }
 
     const vNodes = [
-      null, //t. -> starts with null
-      null, // transition t -> f
-      null, //t. -> starts with null
-      null, //t. -> starts with null
+//      null, //t. -> starts with null
+      null, // transition -> f
+//      null, //t. -> starts with null
+//      null, //t. -> starts with null
       makeVNode('c', 'd'),
-      null, //t. -> starts with null
-      null, //t. -> starts with null
-      null, //t. -> starts with null
-      null, // transition t -> f
-      // transition f -> f // Is that good??? Yes it is filtered in
+//      null, //t. -> starts with null
+//      null, //t. -> starts with null
+//      null, //t. -> starts with null
+      null, // transition -> f
+      // transition -> f // Is that good??? Yes it is filtered in
       // utils.mergeChildrenIntoParentDOM
       null,
-      null, //t. -> starts with null
+//      null, //t. -> starts with null
       //      makeVNode('c','e'), // won't happen because combineLatest
       // (a,b) needs a first value for both a and b to emits its first value
       //      makeVNode('d','e'),
@@ -238,7 +243,7 @@ define(function (require) {
 
   })
 
-  QUnit.test("main cases - parent - 2 children - switch on condition", function exec_test(assert) {
+  QUnit.skip("main cases - parent - 2 children - switch on condition", function exec_test(assert) {
     let done = assert.async(3)
 
     const childComponent1 = function childComponent1(sources, settings) {
@@ -270,18 +275,47 @@ define(function (require) {
     }
 
     // TODO put a parent here
-    const mComponent = m({mergeSinks: (ownSinks, childrenSinks) => {
-      return // TODO : I should pass the childrenSinks in the form
-      // {sinkName: [ProjectedChildrenSinks]}, and same form for the parent
-      // and update the tests
-      // TODO : add a utility function which adds the parent on top of the
-      // children
-      // TODO : for switch try with a normal merge for all sinkNames
-      // but If I do a merge normal on DOM, I don't need to start with null
-      // anymore??, YES I DO : be aware that the merge is only at top level,
-      // the lower level (case) is with combineLatest on the children
-      // NO : try with normal merge and no null !!
-    }}, {}, [
+    const mComponent = m({
+      mergeSinks: {
+        DOM: function mergeDomSwitchedSinks(ownSink, childrenDOMSink, settings) {
+          const allSinks = flatten([ownSink, childrenDOMSink])
+          const allDOMSinks = removeNullsFromArray(allSinks)
+          return $.zip(allDOMSinks) //!! passes an array
+              .tap(console.warn.bind(console, 'Switch.specs' +
+                  ' > mergeDomSwitchedSinks > zip'))
+              // Most values will be null
+              // All non-null values correspond to a match
+              // In the degenerated case, all values will be null (no match
+              // at all)
+              .map(arrayVNode => {
+                const _arrayVNode = removeNullsFromArray(arrayVNode)
+                switch (_arrayVNode.length) {
+                  case 0 :
+                    return null
+                  case 1 :
+                    return _arrayVNode[0]
+                  default :
+                    return div(_arrayVNode)
+                }
+              })
+
+          let _arrayVNode = removeEmptyVNodes(removeNullsFromArray(arrayVNode))
+          assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
+              ' stream VNode objects! Got ' + _arrayVNode)
+
+          // TODO : I should pass the childrenSinks in the form
+          // {sinkName: [ProjectedChildrenSinks]}, and same form for the parent
+          // and update the tests
+          // TODO : add a utility function which adds the parent on top of the
+          // children
+          // TODO : for switch try with a normal merge for all sinkNames
+          // but If I do a merge normal on DOM, I don't need to start with null
+          // anymore??, YES I DO : be aware that the merge is only at top level,
+          // the lower level (case) is with combineLatest on the children
+          // NO : try with normal merge and no null !!
+        }
+      }
+    }, {}, [
       m(Switch, {
         index: 0,
         on: 'sweatch$',

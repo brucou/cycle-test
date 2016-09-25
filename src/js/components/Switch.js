@@ -36,7 +36,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   const {
       assertSignature, assertContract, checkSignature, hasPassedSignatureCheck,
       isString, isArray, isArrayOf, isFunction, defaultsTo, isSource,
-      unfoldObjOverload, m
+      unfoldObjOverload, m, removeNullsFromArray
   } = U
   const {
       forEach, all, any, map, mapObjIndexed, reduce, keys, values,
@@ -209,7 +209,9 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
                 // have started, and that behaviour interacts badly with
                 // route changes desired behavior, we forcibly emits a `null`
                 // value at the beginning of every sink.
-                $.of(null) : //$.of(null) : // $.empty():
+                // !! Don't start with null in case of switching IN, only
+                // when OUT
+                $.empty() : //$.of(null) : // $.empty():
                 // Case : Non-DOM sink
                 // Non-DOM sinks are merged with a simple `merge`, there
                 // is no conflict here, so we just return nothing
@@ -255,7 +257,45 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     return mergeAll(map(makeSwitchedSink, sinkNames))
   }
 
+  const SwitchCase = {
+    mergeSinks: {
+      DOM: function mergeDomSwitchedSinks(ownSink, childrenDOMSink, settings) {
+        const allSinks = flatten([ownSink, childrenDOMSink])
+        const allDOMSinks = removeNullsFromArray(allSinks)
+
+        // NOTE : zip rxjs does not accept only one argument...
+        if (allDOMSinks.length === 1) {
+          return allDOMSinks[0]
+        }
+        else {
+          return $.zip(allDOMSinks) //!! passes an array
+              .tap(console.warn.bind(console, 'Switch.specs' +
+                  ' > mergeDomSwitchedSinks > zip'))
+              // Most values will be null
+              // All non-null values correspond to a match
+              // In the degenerated case, all values will be null (no match
+              // at all)
+              .map(arrayVNode => {
+                const _arrayVNode = removeEmptyVNodes(removeNullsFromArray(arrayVNode))
+                assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
+                    ' stream VNode objects! Got ' + _arrayVNode)
+
+                switch (_arrayVNode.length) {
+                  case 0 :
+                    return null
+                  case 1 :
+                    return _arrayVNode[0]
+                  default :
+                    return div(_arrayVNode)
+                }
+              })
+        }
+      }
+    }
+  }
+
   return {
-    computeSinks: computeSinks
+    computeSinks: computeSinks,
+    SwitchCase: SwitchCase
   }
 }
