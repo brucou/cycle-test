@@ -11,6 +11,9 @@ define(function (require) {
  * @typedef {function(*):boolean} Predicate
  */
 /**
+ * @typedef {function(*):SignatureCheck} PredicateWithError
+ */
+/**
  * @typedef {Object} Input
  */
 /**

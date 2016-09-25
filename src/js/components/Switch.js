@@ -61,9 +61,8 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
       sinkNames: 'sinkNames property must be an array of strings',
       on: '`on` property is mandatory and must be a string or a function.'
     }
-    const signatureCheck = checkSignature(settings, signature, signatureErrorMessages)
 
-    return hasPassedSignatureCheck(signatureCheck) ? true : signatureCheck
+    return checkSignature(settings, signature, signatureErrorMessages)
   }
 
   function hasAtLeastOneChildComponent(childrenComponents) {
@@ -116,7 +115,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
    * Contracts:
    * 1. Must have at least 1 child component (can't be switching to nothingness)
    */
-  function makeAllSinks(sources, settings, childrenComponents) {
+  function computeSinks(makeOwnSinks, childrenComponents, sources, settings) {
     // 3. Check settings and sources contracts with the passed arguments,
     // i.e. before merging. This is done to prevent pollution from
     // properties inherited from parent
@@ -127,6 +126,12 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     // debug info
     console.groupCollapsed('Switch component > makeAllSinks')
     console.debug('sources, settings, childrenComponents', sources, settings, childrenComponents)
+
+    // TODO : a switch has to be wrapped into a switcher:
+    // TODO : merge function is merge, not combineLatest!!
+    // a switxh MUST have only one branch true for any given switch value
+    // API : Switch({on: source$|Predicate},[Case({when:value})])
+    // but inside the Case component, merge is combineLatest as always
 
     // TODO : analyze whether merge inner settings etc. into the
     // settings passed in AllSinks...
@@ -204,7 +209,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
                 // have started, and that behaviour interacts badly with
                 // route changes desired behavior, we forcibly emits a `null`
                 // value at the beginning of every sink.
-                $.of(null) :
+                $.of(null) : //$.of(null) : // $.empty():
                 // Case : Non-DOM sink
                 // Non-DOM sinks are merged with a simple `merge`, there
                 // is no conflict here, so we just return nothing
@@ -251,6 +256,6 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
   }
 
   return {
-    makeAllSinks: makeAllSinks
+    computeSinks: computeSinks
   }
 }

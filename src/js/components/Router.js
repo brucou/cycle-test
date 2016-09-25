@@ -119,13 +119,13 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
    * @param {{route: string, sinkNames: Array<string>, trace: string}} settings
    * @param {Array<Component>} childrenComponents
    */
-  function makeAllSinks(sources, settings, childrenComponents) {
+  function computeSinks(makeOwnSinks, childrenComponents, sources, settings) {
     console.groupCollapsed('Router component > makeAllSinks')
     console.log('sources, settings, childrenComponents', sources, settings, childrenComponents);
 
     const signature = [{settings: isRouteSettings},]
 
-    assertSignature('makeAllSinks', [settings], signature)
+    assertSignature('Router > computeSinks', [settings], signature)
 
     // The sink names are necessary as we cannot know otherwise in
     // advance what are the sinks output by the children components without
@@ -267,7 +267,7 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   }
 
   return {
-    makeAllSinks: makeAllSinks
+    computeSinks: computeSinks
   }
 }
 

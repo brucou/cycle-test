@@ -270,7 +270,18 @@ define(function (require) {
     }
 
     // TODO put a parent here
-    const mComponent = m({}, {}, [
+    const mComponent = m({mergeSinks: (ownSinks, childrenSinks) => {
+      return // TODO : I should pass the childrenSinks in the form
+      // {sinkName: [ProjectedChildrenSinks]}, and same form for the parent
+      // and update the tests
+      // TODO : add a utility function which adds the parent on top of the
+      // children
+      // TODO : for switch try with a normal merge for all sinkNames
+      // but If I do a merge normal on DOM, I don't need to start with null
+      // anymore??, YES I DO : be aware that the merge is only at top level,
+      // the lower level (case) is with combineLatest on the children
+      // NO : try with normal merge and no null !!
+    }}, {}, [
       m(Switch, {
         index: 0,
         on: 'sweatch$',

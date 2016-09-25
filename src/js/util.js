@@ -10,8 +10,8 @@ define(function (require) {
 function require_util(Rx, $, R, Sdom) {
   const {h, div, span} = Sdom
   const {
-      mapObjIndexed, flatten, keys, always, reject, isNil, complement, uniq,
-      merge, reduce, all, either, clone, map, values, any
+      mapObjIndexed, flatten, keys, always, reject, isNil, uniq,
+      merge, reduce, all, either, clone, map, values, equals, concat
   } = R
   const mapIndexed = R.addIndex(R.map)
   const deepMerge = function deepMerge(a, b) {
@@ -24,32 +24,96 @@ function require_util(Rx, $, R, Sdom) {
   // TODO : put the m helper in a separate file (combinator? like the router)
   // organized by category, here the category is sources
   const routeSourceName = 'route$'
+  const defaultMergeSinkConfig = {
+    DOM: computeDOMSinkDefault,
+    _default: computeSinkDefault
+  }
+
+  /**
+   * Merges the DOM nodes produced by a parent component with the DOM nodes
+   * produced by children components, such that the parent DOM nodes
+   * wrap around the children DOM nodes
+   * For instance:
+   * - parent -> div(..., [h2(...)])
+   * - children -> [div(...), button(...)]
+   * - result : div(..., [h2(...), div(...), button(...)])
+   * @param {Sink} parentDOMSinkOrNull
+   * @param {Array<Sink>} childrenSink
+   * @param {Settings} settings
+   * @returns {Observable<VNode>|Null}
+   */
+  function computeDOMSinkDefault(parentDOMSinkOrNull, childrenSink, settings) {
+    // We want `combineLatest` to still emit the parent DOM sink, even when
+    // one of its children sinks is empty, so we modify the children sinks
+    // to emits ONE `Null` value if it is empty
+    // Note : in default function, settings parameter is not used
+    const childrenDOMSinkOrNull = map(emitNullIfEmpty, childrenSink)
+
+    const allSinks = flatten([parentDOMSinkOrNull, childrenDOMSinkOrNull])
+    const allDOMSinks = removeNullsFromArray(allSinks)
+
+    // Edge case : none of the sinks have a DOM sink
+    // That should not be possible as we come here only
+    // when we detect a DOM sink
+    if (allDOMSinks.length === 0) {
+      throw `mergeDOMSinkDefault: internal error!`
+    }
+
+    return $.combineLatest(allDOMSinks)
+        .tap(console.log.bind(console, 'mergeDOMSinkDefault: allDOMSinks'))
+        .map(mergeChildrenIntoParentDOM(parentDOMSinkOrNull))
+  }
+
+  function computeSinkDefault(parentDOMSinkOrNull, childrenSink, settings) {
+    const allSinks = concat([parentDOMSinkOrNull], childrenSink)
+
+    // Nulls have to be removed as a given sink name will not be in all children
+    // sinks. It is however guaranteed by the caller that the given sink
+    // name will be in at least one of the children. Hence the merged array
+    // is never empty
+    return $.merge(removeNullsFromArray(allSinks))
+  }
 
   // Type checking typings
   /**
    * @typedef {String} ErrorMessage
    */
   /**
-   * @typedef {Array<ErrorMessage>} SignatureCheck
+   * @typedef {Boolean|Array<ErrorMessage>} SignatureCheck
+   * Note : The booleam can only be true
    */
 
   // Component typings
   /**
-   * @typedef {Object.<string, Observable>} Sources
+   * @typedef {String} SourceName
    */
   /**
-   * @typedef {Object.<string, Observable>} Sinks
-   * NOTE : this type def is not perfect as we allow sometimes null values
+   * @typedef {String} SinkName
+   */
+  /**
+   * @typedef {Observable} Source
+   */
+  /**
+   * @typedef {Observable|Null} Sink
+   */
+  /**
+   * @typedef {Object.<string, Source>} Sources
+   */
+  /**
+   * @typedef {Object.<string, Sink>} Sinks
    */
   /**
    * @typedef {?Object.<string, ?Object>} Settings
    */
   /**
+   * @typedef {function(Sink, Array<Sink>, Settings):Sink} mergeSink
+   */
+  /**
    * @typedef {Object} DetailedComponentDef
    * @property {?function(Sources, Settings)} makeLocalSources
    * @property {?function(Settings)} makeLocalSettings
-   * @property {?function(Sources, Settings)} makeOwnSinks
-   * @property {function(Sinks, Array<Sinks>, Settings)} mergeSinks
+   * @property {?function(Sources, Settings):Sinks} makeOwnSinks
+   * @property {Object.<SinkName, mergeSink> | function} mergeSinks
    * @property {function(Sinks):Boolean} sinksContract
    * @property {function(Sources):Boolean} sourcesContract
    */
@@ -57,7 +121,9 @@ function require_util(Rx, $, R, Sdom) {
    * @typedef {Object} ShortComponentDef
    * @property {?function(Sources, Settings)} makeLocalSources
    * @property {?function(Settings)} makeLocalSettings
-   * @property {function(Sources, Settings, Array<Component>)} makeAllSinks
+   * @property {?function(Sources, Settings):Sinks} makeOwnSinks
+   * @property {function(Component, Array<Component>, Sources, Settings)}
+   * computeSinks
    * @property {function(Sinks):Boolean} sinksContract
    * @property {function(Sources):Boolean} sourcesContract
    */
@@ -65,15 +131,39 @@ function require_util(Rx, $, R, Sdom) {
    * @typedef {function(Sources, Settings):Sinks} Component
    */
 
+  ///////
+  // Helpers
+  function computeReducedSink(ownSinks, childrenSinks, localSettings, mergeSinks) {
+    return function computeReducedSink(accReducedSinks, sinkName) {
+      let mergeSinkFn = mergeSinks[sinkName]
+          || defaultMergeSinkConfig[sinkName]
+          || defaultMergeSinkConfig['_default']
+      assertContract(isMergeSinkFn, [mergeSinkFn], 'm : mergeSinkFn' +
+          ' for sink ${sinkName} must be a function : check' +
+          ' parameter or default merge function!')
+
+      if (mergeSinkFn) {
+        accReducedSinks[sinkName] = mergeSinkFn(
+            ownSinks ? ownSinks[sinkName] : null,
+            projectSinksOn(sinkName, childrenSinks),
+            localSettings
+        )
+      }
+
+      return accReducedSinks
+    }
+  }
+
   /**
    * Returns a component specified by :
    * - a component definition object (nullable)
    * - settings (nullable)
    * - children components
    * Component definition default properties :
-   * - mergeAllSinks :
+   * - mergeSinks :
    *   - DOM : mergeDOMSinksDefault
    *   - non-DOM : mergeNonDOMSinksDefault
+   *   TODO : update with new definition
    * - sinksContract : check all sinks are observables or `null`
    * - makeLocalSources : -> null
    * - makeLocalSettings : -> null
@@ -99,7 +189,6 @@ function require_util(Rx, $, R, Sdom) {
    */
   // m :: Opt Component_Def -> Opt Settings -> [Component] -> Component
   function m(componentDef, _settings, children) {
-    _settings = _settings || {}
     console.groupCollapsed('Utils > m')
     console.log('componentDef, _settings, children', componentDef, _settings, children)
     // check signature
@@ -108,76 +197,63 @@ function require_util(Rx, $, R, Sdom) {
       {settings: isNullableObject},
       {children: isArrayOf(isComponent)},
     ]
-
+    //TODO : check that assert signature works with both predicate and
+    // predicateWithErrorMessage
     assertSignature('m', arguments, mSignature)
 
-    const makeLocalSources = componentDef.makeLocalSources || always(null)
-    const makeLocalSettings = componentDef.makeLocalSettings || always({})
-    const makeOwnSinks = componentDef.makeOwnSinks || always(null)
-    const mergeSinks = componentDef.mergeSinks || mergeSinksDefault
-    const sinksContract = componentDef.sinksContract || always(true)
-    const sourcesContract = componentDef.sourcesContract || always(true)
+    let {
+        makeLocalSources, makeLocalSettings, makeOwnSinks, mergeSinks,
+        computeSinks, sinksContract, sourcesContract
+    } = componentDef
+
+    // Set default values
+    _settings = _settings || {}
+    makeLocalSources = defaultsTo(makeLocalSources, always(null))
+    makeLocalSettings = defaultsTo(makeLocalSettings, always({}))
+    makeOwnSinks = defaultsTo(makeOwnSinks, always(null))
+    mergeSinks = defaultsTo(mergeSinks, {})
+    sinksContract = defaultsTo(sinksContract, always(true))
+    sourcesContract = defaultsTo(sourcesContract, always(true))
     // TODO : add a settingsContract - can be used for components with
     // mandatory settings
 
-    if (componentDef.makeAllSinks) {
-      console.groupEnd()
+    console.groupEnd()
+    return function m(sources, innerSettings) {
+      console.groupCollapsed('m\'ed component > Entry')
+      console.log('sources, innerSettings', sources, innerSettings)
 
-      return function mComponent(sources, innerSettings) {
-        console.groupCollapsed('m\'ed component > makeAllSinks > Entry')
-        console.log('sources, _settings, innerSettings', sources, _settings, innerSettings)
+      innerSettings = innerSettings || {}
+      const mergedSettings = deepMerge(innerSettings, _settings)
 
-        assertSourcesContracts(sources, sourcesContract)
+      assertSourcesContracts(sources, sourcesContract)
 
-        innerSettings = innerSettings || {}
-        const mergedSettings = deepMerge(innerSettings, _settings)
+      // Computes and MERGES the extra sources which will be passed
+      // to the children and this component
+      // Extra sources are derived from the `sources`
+      // received as input, which remain untouched
+      const extendedSources = shareAllSources(
+          merge(sources, makeLocalSources(sources, mergedSettings))
+      )
+      // Note that per `merge` ramda spec. the second object's values
+      // replace those from the first in case of key conflict
+      const localSettings = deepMerge(
+          makeLocalSettings(mergedSettings),
+          mergedSettings
+      )
 
-        const extendedSources = shareAllSources(
-            merge(sources, makeLocalSources(sources, mergedSettings))
+      let reducedSinks
+
+      // Case : computeSinks is defined
+      if (computeSinks) {
+        reducedSinks = computeSinks(
+            makeOwnSinks, children, extendedSources, localSettings
         )
-
-        let sinks = componentDef.makeAllSinks(
-            extendedSources, mergedSettings, children
-        )
-        assertSinksContracts(sinks, sinksContract)
-
-        // TODO : factor out the trace too so I don't duplicate it
-        const tracedSinks = trace(sinks, mergedSettings)
-
-        console.groupEnd()
-
-        return tracedSinks
       }
-    }
-    else {
-      console.groupEnd()
-      return function m(sources, innerSettings) {
-        console.groupCollapsed('m\'ed component > Entry')
-        console.log('sources, innerSettings', sources, innerSettings)
-
-        innerSettings = innerSettings || {}
-        const mergedSettings = deepMerge(innerSettings, _settings)
-
-        assertSourcesContracts(sources, sourcesContract)
-
-        // Computes and MERGES the extra sources which will be passed
-        // to the children and this component
-        // Extra sources are derived from the `sources`
-        // received as input, which remain untouched
-        const extendedSources = shareAllSources(
-            merge(sources, makeLocalSources(sources, mergedSettings))
-        )
-        // Note that per `merge` ramda spec. the second object's values
-        // replace those from the first in case of key conflict
-        const localSettings = deepMerge(
-            makeLocalSettings(mergedSettings),
-            mergedSettings
-        )
-
+      // Case : computeSinks is not defined, merge is defined in mergeSinks
+      else {
         console.groupCollapsed('m\'ed component > makeOwnSinks')
         console.log('extendedSources, localSettings', extendedSources, localSettings)
         const ownSinks = makeOwnSinks(extendedSources, localSettings)
-        if (!ownSinks) console.warn('makeOwnSinks : null!!!')
         console.groupEnd()
 
         console.group('m\'ed component > computing children sinks')
@@ -191,26 +267,43 @@ function require_util(Rx, $, R, Sdom) {
         assertContract(isArrayOptSinks, [childrenSinks], 'childrenSinks must' +
             ' be an array of sinks')
 
-        // merge the sinks from children and one-s own...
-        console.groupCollapsed('m\'ed component > mergeSinks')
-        console.log('ownSinks, childrenSinks, localSettings', ownSinks, childrenSinks, localSettings)
-        const reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
-        console.groupEnd()
+        // Merge the sinks from children and one-s own...
+        // Case : mergeSinks is defined through a function
+        if (isFunction(mergeSinks)) {
+          console.groupCollapsed('m\'ed component > (fn) mergeSinks')
+          console.log('ownSinks, childrenSinks, localSettings', ownSinks, childrenSinks, localSettings)
+          reducedSinks = mergeSinks(ownSinks, childrenSinks, localSettings)
+          console.groupEnd()
+        }
+        // Case : mergeSinks is defined through an object
+        else {
+          const allSinks = flatten(removeNullsFromArray([ownSinks, childrenSinks]))
+          const sinkNames = getSinkNamesFromSinksArray(allSinks)
 
-        assertSinksContracts(reducedSinks, sinksContract)
-
-        const tracedSinks = trace(reducedSinks, mergedSettings)
-        // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
-        // TODO : specify trace/debug/error generation information
-        // This would ensure that errors are automatically and systematically
-        //       caught in the component where they occur, and not
-        //       interrupting the application implementation-wise, it might be
-        //       necessary to add a `currentPath` parameter somewhere which
-        //       carries the current path down the tree
-
-        console.groupEnd()
-        return tracedSinks
+          console.groupCollapsed('m\'ed component > (obj) mergeSinks')
+          console.log('ownSinks, childrenSinks, localSettings,' +
+              ' (fn) mergeSinks', ownSinks, childrenSinks, localSettings, mergeSinks)
+          reducedSinks = reduce(
+              computeReducedSink(ownSinks, childrenSinks, localSettings, mergeSinks),
+              {}, sinkNames
+          )
+          console.groupEnd()
+        }
       }
+
+      assertSinksContracts(reducedSinks, sinksContract)
+
+      const tracedSinks = trace(reducedSinks, mergedSettings)
+      // ... and add tracing information(sinkPath, timestamp, sinkValue/sinkError) after each sink
+      // TODO : specify trace/debug/error generation information
+      // This would ensure that errors are automatically and systematically
+      //       caught in the component where they occur, and not
+      //       interrupting the application implementation-wise, it might be
+      //       necessary to add a `currentPath` parameter somewhere which
+      //       carries the current path down the tree
+
+      console.groupEnd()
+      return tracedSinks
     }
   }
 
@@ -221,7 +314,8 @@ function require_util(Rx, $, R, Sdom) {
    * optional arguments
    * @param {String} fnName
    * @param {Array<*>} _arguments
-   * @param {[Array<Object.<string, Predicate>>]} vRules Validation rules.
+   * @param {[Array<Object.<string, Predicate|PredicateWithError>>]} vRules
+   * Validation rules.
    *
    * Given f(x, y) =  x + y, with x both int, in the body of `f`, include
    * function f(x, y) {
@@ -246,17 +340,20 @@ function require_util(Rx, $, R, Sdom) {
     }, args)
 
     const hasFailed = reduce((acc, value) => {
-      return !value || acc
+      return isFalse(value) || acc
     }, false, validatedArgs)
 
     if (hasFailed) {
-      const validationMessages = mapIndexed((value, index) => {
-            return value ?
+      const validationMessages = mapIndexed((errorMessageOrBool, index) => {
+            return isTrue(errorMessageOrBool) ?
                 '' :
-                [fnName, ':', 'argument', argNames[index],
-                  'fails rule', vRules[index].name].join(' ')
+                [
+                  `${fnName}: argument ${argNames[index]} fails rule ${vRules[index].name}`,
+                  isBoolean(errorMessageOrBool) ? '' : errorMessageOrBool
+                ].join(': ')
           }, validatedArgs
       ).join('\n')
+
       const errorMessage = ['assertSignature:', validationMessages].join(' ')
       throw errorMessage
     }
@@ -264,7 +361,6 @@ function require_util(Rx, $, R, Sdom) {
     return !hasFailed
   }
 
-//df
   /**
    * Test against a predicate, and throws an exception if the predicate
    * is not satisfied
@@ -287,24 +383,17 @@ function require_util(Rx, $, R, Sdom) {
   }
 
   /**
-   * Returns true iff the signature check did not produce any error messages
-   * @param {SignatureCheck} signatureCheck
-   * @returns {boolean}
-   */
-  function hasPassedSignatureCheck(signatureCheck) {
-    return signatureCheck.join("").length === 0
-  }
-
-  /**
    * Returns:
-   * - an empty array if the object passed as parameter passes all the
-   * predicates on its properties
+   * - `true` if the object passed as parameter passes all the predicates on
+   * its properties
    * - an array with the concatenated error messages otherwise
    * @param obj
    * @param {Object.<string, Predicate>} signature
    * @param {Object.<string, string>} signatureErrorMessages
-   * @param {Boolean} strict
-   * @returns {SignatureCheck}
+   * @param {Boolean=false} strict When `true` signals that the object
+   * should not
+   * have properties other than the ones checked for
+   * @returns {Boolean | Array<String>}
    */
   function checkSignature(obj, signature, signatureErrorMessages, isStrict) {
     let arrMessages = []
@@ -323,7 +412,7 @@ function require_util(Rx, $, R, Sdom) {
       }
     }, obj)
 
-    return arrMessages
+    return arrMessages.join("").length === 0 ? true : arrMessages
   }
 
   /**
@@ -332,6 +421,9 @@ function require_util(Rx, $, R, Sdom) {
    * fulfilled. Predicates are tested in order of indexing of the array.
    * - `_index` the index in the array where a predicate was fulfilled if
    * any, undefined otherwise
+   * Ex : unfoldObjOverload('DOM', {sourceName: isString, predicate:
+    * isPredicate})
+   * Result : {sourceName : 'DOM'}
    * @param obj
    * @param {Array<Object.<string, Predicate>>} overloads
    * @returns {{}}
@@ -355,26 +447,34 @@ function require_util(Rx, $, R, Sdom) {
       return predicateEval
     })
     return result
-
-    // TODO : mapObjIndex must be processed after to return true or false...
-    any(overload => {
-      mapObjIndexed((predicate, property) => {
-        const predicateEval = predicate(obj)
-        if (predicateEval) {
-          result[property] = obj
-          result._index = index
-        }
-        index++
-
-        return predicateEval
-      }, overload)
-    }, overloads)
-
-    return result
   }
 
   function defaultsTo(obj, defaultsTo) {
     return !obj ? defaultsTo : obj
+  }
+
+  /**
+   * Returns true iff the parameter is a boolean whose value is false.
+   * This hence does both type checking and value checking
+   * @param obj
+   * @returns {boolean}
+   */
+  function isFalse(obj) {
+    return isBoolean(obj) ? !obj : false
+  }
+
+  /**
+   * Returns true iff the parameter is a boolean whose value is false.
+   * This hence does both type checking and value checking
+   * @param obj
+   * @returns {boolean}
+   */
+  function isTrue(obj) {
+    return isBoolean(obj) ? obj : false
+  }
+
+  function isMergeSinkFn(obj) {
+    return isFunction(obj)
   }
 
   /**
@@ -388,16 +488,39 @@ function require_util(Rx, $, R, Sdom) {
     return obj == null || typeof obj === 'object'
   }
 
+  /**
+   *
+   * @param obj
+   * @returns {SignatureCheck}
+   */
   function isNullableComponentDef(obj) {
     // Note that `==` is used instead of `===`
     // This allows to test for `undefined` and `null` at the same time
-    return obj == null || (
-            (!obj.makeLocalSources || isFunction(obj.makeLocalSources)) &&
-            (!obj.makeLocalSettings || isFunction(obj.makeLocalSettings)) &&
-            (!obj.makeOwnSinks || isFunction(obj.makeOwnSinks)) &&
-            (!obj.mergeSinks || isFunction(obj.mergeSinks)) &&
-            (!obj.sinksContract || isFunction(obj.sinksContract))
-        )
+
+    return isNil(obj) || checkSignature(obj, {
+          makeLocalSources: either(isNil, isFunction),
+          makeLocalSettings: either(isNil, isFunction),
+          makeOwnSinks: either(isNil, isFunction),
+          mergeSinks: mergeSinks => {
+            if (obj.computeSinks) {
+              return !mergeSinks
+            }
+            else {
+              return either(isNil, either(isObject, isFunction))(mergeSinks)
+            }
+          },
+          computeSinks: either(isNil, isFunction),
+          sinksContract: either(isNil, isFunction)
+        }, {
+          makeLocalSources: 'makeLocalSources must be undefined or a function',
+          makeLocalSettings: 'makeLocalSettings must be undefined or a' +
+          ' function',
+          makeOwnSinks: 'makeOwnSinks must be undefined or a function',
+          mergeSinks: 'mergeSinks can only be defined when `computeSinks` is' +
+          ' not, and when so, it must be undefined, an object or a function',
+          computeSinks: 'computeSinks must be undefined or a function',
+          sinksContract: 'sinksContract must be undefined or a function'
+        }, true)
   }
 
   function isUndefined(obj) {
@@ -534,11 +657,29 @@ function require_util(Rx, $, R, Sdom) {
     return reject(isNil, arr)
   }
 
+  function removeEmptyVNodes(arrVNode) {
+    return reduce((accNonEmptyVNodes, vNode) => {
+      return (isNullVNode(vNode)) ?
+          accNonEmptyVNodes :
+          (accNonEmptyVNodes.push(vNode), accNonEmptyVNodes)
+    }, [], arrVNode)
+  }
+
+  function isNullVNode(vNode) {
+    return
+    equals(vNode.children, []) &&
+    equals(vNode.data, {}) &&
+    isUndefined(vNode.elm) &&
+    isUndefined(vNode.key) &&
+    isUndefined(vNode.sel) &&
+    isUndefined(vNode.text)
+  }
+
   function mergeChildrenIntoParentDOM(parentDOMSink) {
     return function mergeChildrenIntoParentDOM(arrayVNode) {
       // We remove null elements from the array of vNode
       // We can have a null vNode emitted by a sink if that sink is empty
-      let _arrayVNode = removeNullsFromArray(arrayVNode)
+      let _arrayVNode = removeEmptyVNodes(removeNullsFromArray(arrayVNode))
       assertContract(isArrayOf(isVNode), [_arrayVNode], 'DOM sources must' +
           ' stream VNode objects! Got ' + _arrayVNode)
 
@@ -583,7 +724,15 @@ function require_util(Rx, $, R, Sdom) {
         // Case : the parent sinks does not have a DOM sink
         // To avoid putting an extra `div` when there is only one vNode
         // we put the extra `div` only when there are several vNodes
-        return arrayVNode.length === 1 ? arrayVNode[0] : div(arrayVNode)
+        switch (_arrayVNode.length) {
+          case 0 :
+            return null
+          case 1 :
+            return _arrayVNode[0]
+          default :
+            return div(_arrayVNode)
+        }
+//        return _arrayVNode.length === 1 ? _arrayVNode[0] : div(_arrayVNode)
         //        return div(arrayVNode)
       }
     }
@@ -681,15 +830,6 @@ function require_util(Rx, $, R, Sdom) {
         .map(mergeChildrenIntoParentDOM(parentDOMSink))
   }
 
-  function mergeNonDomSinksDefault(parentSinks, childrenSinks, sinkName) {
-    const allSinks = flatten([parentSinks, childrenSinks])
-
-    // The edge case when none of the sinks have a non-DOM sink
-    // should never happen as we come here only when we have a sink name
-    // which is not a DOM sink
-    return $.merge(removeNullsFromArray(projectSinksOn(sinkName, allSinks)))
-  }
-
   function makeDefaultMergedSinks(parentSinks, childrenSinks) {
     return function setDefaultSinks(accSinks, sinkName) {
       let value
@@ -742,7 +882,6 @@ function require_util(Rx, $, R, Sdom) {
     makeDivVNode: makeDivVNode,
     assertSignature: assertSignature,
     assertContract: assertContract,
-    hasPassedSignatureCheck: hasPassedSignatureCheck,
     checkSignature: checkSignature,
     unfoldObjOverload: unfoldObjOverload,
     projectSinksOn: projectSinksOn,
