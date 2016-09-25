@@ -22,34 +22,34 @@ define(function (require) {
     const childComponent1 = function childComponent1(sources, settings) {
       return {
         DOM: sources.DOM1.take(4)
-          .tap(console.warn.bind(console, 'DOM : component 1: '))
-          .map(x => h('span', {},
-            'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
-          .concat($.never()),
+            .tap(console.warn.bind(console, 'DOM : component 1: '))
+            .map(x => h('span', {},
+                'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
+            .concat($.never()),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
-          .map(x => 'Component 1 - routeLog - ' +
-          settings.routeParams.user + settings.routeParams.id),
+            .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
+            .map(x => 'Component 1 - routeLog - ' +
+            settings.routeParams.user + settings.routeParams.id),
         a: sources.userAction$.map(x => 'Component1 - user action - ' + x)
       }
     }
     const childComponent2 = function childComponent1(sources, settings) {
       return {
         DOM: sources.DOM2.take(4)
-          .tap(console.warn.bind(console, 'DOM : component 2: '))
-          .map(x => h('span', {},
-            'Component 2 : id=' + settings.routeParams.id + ' - ' + x))
-          .concat($.never()),
+            .tap(console.warn.bind(console, 'DOM : component 2: '))
+            .map(x => h('span', {},
+                'Component 2 : id=' + settings.routeParams.id + ' - ' + x))
+            .concat($.never()),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
-          .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
+            .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
+            .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
         b: sources.userAction$.map(x => 'Component2 - user action - ' + x)
       }
     }
 
     const mComponent = m(Router,
-      {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
-      [childComponent1, childComponent2])
+        {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
+        [childComponent1, childComponent2])
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
@@ -79,7 +79,7 @@ define(function (require) {
 
     function makeVNode(componentNum, id, x) {
       return h('span', {},
-        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+          'Component ' + componentNum + ' : id=' + id + ' - ' + x)
     }
 
     const vNodes = [
@@ -239,16 +239,16 @@ define(function (require) {
 
         return {
           DOM: sources.DOM1.take(4)
-            .tap(console.warn.bind(console, 'DOM : child component : '))
-            .map(x => h('span', {},
-              'Child component : user=' + user + ' - ' + x))
-            .concat($.never()),
+              .tap(console.warn.bind(console, 'DOM : child component : '))
+              .map(x => h('span', {},
+                  'Child component : user=' + user + ' - ' + x))
+              .concat($.never()),
           routeLog: sources.route$
-            .tap(console.warn.bind(console, 'routeLog : child component -' +
-              ' route$'))
-            .map(function (x) {
-              return 'Child component 1 - routeLog - ' + user //+ '-' + counter
-            }),
+              .tap(console.warn.bind(console, 'routeLog : child component -' +
+                  ' route$'))
+              .map(function (x) {
+                return 'Child component 1 - routeLog - ' + user //+ '-' + counter
+              }),
           userAction1$: sources.userAction$.map(x => 'child component - user' +
           ' action - ' + x).startWith('child component - starting')
         }
@@ -262,22 +262,22 @@ define(function (require) {
 
       return {
         DOM: sources.DOM2.take(4)
-          .tap(console.warn.bind(console, 'DOM : great child component : '))
-          .map(x => h('span', {},
-            'Great child component : id=' + settings.routeParams.id + ' - ' + x))
-          .concat($.never()),
+            .tap(console.warn.bind(console, 'DOM : great child component : '))
+            .map(x => h('span', {},
+                'Great child component : id=' + settings.routeParams.id + ' - ' + x))
+            .concat($.never()),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : great child component -' +
-            ' route$'))
-          .map(x => [
-            'great child component - routeLog -',
-            '(user: ' + settings.routeParams.user + ',',
-            'id: ' + settings.routeParams.id + ')'
-          ].join(' ')),
+            .tap(console.warn.bind(console, 'routeLog : great child component -' +
+                ' route$'))
+            .map(x => [
+              'great child component - routeLog -',
+              '(user: ' + settings.routeParams.user + ',',
+              'id: ' + settings.routeParams.id + ')'
+            ].join(' ')),
         userAction2$: sources.userAction$.map(x => 'great child component -' +
         ' user action - ' + x).startWith('great child component - starting'),
         notMerged: sources.DOM1.map(x => 'ERROR')
-          .tap(console.log.bind(console, 'notMerged:'))
+            .tap(console.log.bind(console, 'notMerged:'))
       }
     }
 
@@ -484,7 +484,7 @@ define(function (require) {
     })
 
     assert.equal(true, true, 'sinks whose name is not present in sinkNames' +
-      ' are not merged')
+        ' are not merged')
 
   })
 
@@ -494,14 +494,14 @@ define(function (require) {
     const childComponent1 = function childComponent1(sources, settings) {
       return {
         DOM: sources.DOM1.take(4)
-          .tap(console.warn.bind(console, 'DOM : component 1: '))
-          .map(x => h('span', {},
-            'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
-          .concat($.never()),
+            .tap(console.warn.bind(console, 'DOM : component 1: '))
+            .map(x => h('span', {},
+                'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
+            .concat($.never()),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
-          .map(x => 'Component 1 - routeLog - ' +
-          settings.routeParams.user + settings.routeParams.id),
+            .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
+            .map(x => 'Component 1 - routeLog - ' +
+            settings.routeParams.user + settings.routeParams.id),
         a: sources.userAction$.map(x => 'Component1 - user action - ' + x)
       }
     }
@@ -509,15 +509,15 @@ define(function (require) {
       return {
         DOM: $.empty(),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
-          .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
+            .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
+            .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
         b: sources.userAction$.map(x => 'Component2 - user action - ' + x)
       }
     }
 
     const mComponent = m(Router,
-      {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
-      [childComponent1, childComponent2])
+        {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
+        [childComponent1, childComponent2])
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
@@ -547,23 +547,23 @@ define(function (require) {
 
     function makeVNode(componentNum, id, x) {
       return h('span', {},
-        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+          'Component ' + componentNum + ' : id=' + id + ' - ' + x)
     }
 
     const vNodes = [
       null, // starts with null
-      div([
-        makeVNode(1, 1, 'b'),
-      ]),
+//      div([ // when only one vNode, no extra div is added
+      makeVNode(1, 1, 'b'),
+//      ]),
       null, // a. -> b. : from match to no match
       null, // c. : starts with null
-      div([
-        makeVNode(1, 2, 'd'),
-      ]),
+//      div([
+      makeVNode(1, 2, 'd'),
+//      ]),
       null, // f. : starts with null
-      div([
-        makeVNode(1, 3, 'e'),
-      ]),
+//      div([
+      makeVNode(1, 3, 'e'),
+//      ]),
       null, // paul -> from match to no match
     ]
 
@@ -630,20 +630,20 @@ define(function (require) {
   })
 
   QUnit.test("edge cases - non-nested routing - 1 child with null DOM sink," +
-    " 1 with non-null DOM sink", function exec_test(assert) {
+      " 1 with non-null DOM sink", function exec_test(assert) {
     let done = assert.async(4)
 
     const childComponent1 = function childComponent1(sources, settings) {
       return {
         DOM: sources.DOM1.take(4)
-          .tap(console.warn.bind(console, 'DOM : component 1: '))
-          .map(x => h('span', {},
-            'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
-          .concat($.never()),
+            .tap(console.warn.bind(console, 'DOM : component 1: '))
+            .map(x => h('span', {},
+                'Component 1 : id=' + settings.routeParams.id + ' - ' + x))
+            .concat($.never()),
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
-          .map(x => 'Component 1 - routeLog - ' +
-          settings.routeParams.user + settings.routeParams.id),
+            .tap(console.warn.bind(console, 'routeLog : component 1 - route$'))
+            .map(x => 'Component 1 - routeLog - ' +
+            settings.routeParams.user + settings.routeParams.id),
         a: sources.userAction$.map(x => 'Component1 - user action - ' + x)
       }
     }
@@ -651,15 +651,15 @@ define(function (require) {
       return {
         DOM: null,
         routeLog: sources.route$
-          .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
-          .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
+            .tap(console.warn.bind(console, 'routeLog : component 2 - route$'))
+            .map(x => 'Component2 - routeLog - routeRemainder: ' + x),
         b: sources.userAction$.map(x => 'Component2 - user action - ' + x)
       }
     }
 
     const mComponent = m(Router,
-      {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
-      [childComponent1, childComponent2])
+        {route: ':user/:id', sinkNames: ['DOM', 'routeLog', 'a', 'b']},
+        [childComponent1, childComponent2])
 
     const inputs = [
       {DOM1: {diagram: '-a--b--c--d--e--f--a--b--c--d-'}},
@@ -689,17 +689,17 @@ define(function (require) {
 
     function makeVNode(componentNum, id, x) {
       return h('span', {},
-        'Component ' + componentNum + ' : id=' + id + ' - ' + x)
+          'Component ' + componentNum + ' : id=' + id + ' - ' + x)
     }
 
     const vNodes = [
       null, // starts with null
-        makeVNode(1, 1, 'b'),
+      makeVNode(1, 1, 'b'),
       null, // a. -> b. : from match to no match
       null, // c. : starts with null
-        makeVNode(1, 2, 'd'),
+      makeVNode(1, 2, 'd'),
       null, // f. : starts with null
-        makeVNode(1, 3, 'e'),
+      makeVNode(1, 3, 'e'),
       null, // paul -> from match to no match
     ]
 
