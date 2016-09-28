@@ -25,24 +25,10 @@ function require_router_component(Rx, $, U, R, Sdom, routeMatcher) {
   const m = U.m
 
   const mapR = R.map
-  const mapObjIndexed = R.mapObjIndexed
-  const mapIndexed = R.addIndex(R.map)
-  const mergeR = R.merge
   const mergeAllR = R.mergeAll
-  const valuesR = R.values
-  const eitherR = R.either
-  const flatten = R.flatten
-  const allR = R.all
-  const keys = R.keys
-  const reduceR = R.reduce
-  const always = R.always
-  const reject = R.reject
   const isNil = R.isNil
-  const uniq = R.uniq
   const omit = R.omit
   const pathR = R.path
-  const complement = R.complement
-  const prepend = R.prepend
 
   const nullVNode = {
     "children": undefined,

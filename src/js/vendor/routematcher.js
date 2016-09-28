@@ -102,6 +102,5 @@
     }
     return self;
   };
-
-  return exports;
+return exports;
 }));
