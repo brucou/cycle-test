@@ -80,7 +80,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
     // This will have to be done via settingsContracts at SwitchCase level
 
     // debug info
-    console.groupCollapsed('Switch component > computeSinks')
+    // console.groupCollapsed('Switch component > computeSinks')
     console.debug('sources, settings, childrenComponents', sources, settings, childrenComponents)
 
     assertContract(isSwitchSettings, [settings], 'Invalid switch' +
@@ -114,6 +114,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
 
     const shouldSwitch$ = switchSource
         .map(x => eqFn(caseWhen, x))
+        .share()
 
     const cachedSinks$ = shouldSwitch$
         .filter(x => x)
@@ -164,7 +165,7 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
             preCached$ = cachedSinks[sinkName]
                 .tap(console.log.bind(console, 'sink ' + sinkName + ':'))
                 .finally(_ => {
-                  console.log(`sink ${sinkName} terminating due to route change`)
+                  console.log(`sink ${sinkName} terminating due to applicable case change`)
                 })
 
             cached$ = $.concat(prefix$, preCached$)
@@ -192,11 +193,15 @@ function require_switch_component(Rx, $, U, R, Sdom, cfg) {
         [sinkName]: shouldSwitch$.withLatestFrom(
             cachedSinks$,
             makeSwitchedSinkFromCache(sinkName)
-        ).switch()
+        )
+            .tap(function () {
+              console.warn(`switching: ${sinkName}`)
+            })
+            .switch()
       }
     }
 
-    console.groupEnd()
+    // console.groupEnd()
 
     return mergeAll(map(makeSwitchedSink, sinkNames))
   }

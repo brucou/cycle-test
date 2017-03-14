@@ -287,9 +287,8 @@ function require_test_utils(Rx, $, R, U) {
 
     // Execute the function to be tested (for example a cycle component)
     // with the source subjects
-    console.groupCollapsed('runTestScenario: executing test function')
+    console.error('runTestScenario: executing test function')
     let testSinks = testFn(sourcesSubjects)
-    console.groupEnd('runTestScenario: executing test function')
 
     if (!isOptSinks(testSinks)) {
       throw 'encountered a sink which is not an observable!'

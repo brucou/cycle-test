@@ -227,7 +227,7 @@ function require_util(Rx, $, R, Sdom) {
 
     console.groupEnd()
     return function m(sources, innerSettings) {
-      console.groupCollapsed('m\'ed component > Entry')
+      console.info('m\'ed component > Entry')
       console.log('sources, innerSettings', sources, innerSettings)
 
       assertSettingsContracts(innerSettings, settingsContract)
@@ -257,6 +257,8 @@ function require_util(Rx, $, R, Sdom) {
 
       // Case : computeSinks is defined
       if (computeSinks) {
+        console.log('m\'ed component > computeSinks defined : computing' +
+            ' reduced sinks!')
         reducedSinks = computeSinks(
             makeOwnSinks, children, extendedSources, localSettings
         )
@@ -268,13 +270,13 @@ function require_util(Rx, $, R, Sdom) {
         const ownSinks = makeOwnSinks(extendedSources, localSettings)
         console.groupEnd()
 
-        console.group('m\'ed component > computing children sinks')
+        console.log('m\'ed component > computing children sinks')
         const childrenSinks = map(
             childComponent => childComponent(extendedSources, localSettings),
             children
         )
-        console.groupEnd('m\'ed component > computing children sinks')
 
+        console.log('m\'ed component > asserting sink contracts')
         assertContract(isOptSinks, [ownSinks], 'ownSinks must be a hash of observable sink')
         assertContract(isArrayOptSinks, [childrenSinks], 'childrenSinks must' +
             ' be an array of sinks')
@@ -314,7 +316,8 @@ function require_util(Rx, $, R, Sdom) {
       //       necessary to add a `currentPath` parameter somewhere which
       //       carries the current path down the tree
 
-      console.groupEnd()
+      console.info('m\'ed component > Exit')
+
       return tracedSinks
     }
   }

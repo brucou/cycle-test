@@ -210,6 +210,7 @@ function mdiv(selector, modulesOrFn, childrenOrFn) {
             // against them
             // removeNullValues :: [Opt T] -> [T]
             // returns an array without null elements
+              // TODO : edge case where the returning array is empty!!
             removeNullValues(childrenDOMSink),
             // arrayVNode :: [VNode]
             function (arrayVNode) { return divFn(arrayVNode); } // i.e. divFn (kept for clarity)
@@ -348,88 +349,87 @@ function mdiv(selector, modulesOrFn, childrenOrFn) {
 // | h([children])
 
 // Example mermaid
-// graph
-// TB
-//
-// subgraph
-// TabbedComponent
-// subgraph
-// TabEMEA
-// subgraph
-// SourcesTabEMEA
-// DOMTabEMEA(DOM)
-// FirebaseTabEMEA(Firebase)
-// SalesTabEMEA(salesEMEA)
-// end
-//
-// subgraph
-// SinksTabEMEA
-// SinkDOMTabEMEA(DOM)
-// SinkActionTabEMEA(Action)
-// end
-//
-// DOMTabEMEA-- > bodyEMEA(...)
-// FirebaseTabEMEA(Firebase)-- > bodyEMEA(...)
-// alesTabEMEA(salesEMEA)-- > bodyEMEA(...)
-// bodyEMEA-- > SinkDOMTabEMEA
-// bodyEMEA-- > SinkActionTabEMEA
-// end
-//
-// subgraph
-// TabAmerica
-// subgraph
-// SourcesTabAmerica
-// DOMTabAmerica(DOM)
-// FirebaseTabAmerica(Firebase)
-// SalesTabAmerica(salesAmerica)
-// end
-//
-// subgraph
-// SinksTabAmerica
-// SinkDOMTabAmerica(DOM)
-// SinkActionTabAmerica(Action)
-// end
-//
-// DOMTabAmerica-- > bodyAmerica(...)
-// FirebaseTabAmerica(Firebase)-- > bodyAmerica(...)
-// SalesTabAmerica(salesAmerica)-- > bodyAmerica(...)
-// bodyAmerica-- > SinkDOMTabAmerica
-// bodyAmerica-- > SinkActionTabAmerica
-// end
-//
-// subgraph
-// SourcesTabbedComponent
-// subgraph
-// ExtraSourcesTabbedComponent
-// SalesTabbedComponentEMEA(salesEMEA)
-// SalesTabbedComponentAmerica(salesAmerica)
-// end
-//
-// DOMTabbedComponent(DOM)
-// FirebaseTabbedComponent(Firebase)
-// end
-//
-// subgraph
-// SinksTabbedComponent
-// SinkDOMTabbedComponent(DOM)
-// SinkActionTabbedComponent(Action)
-// end
-//
-// DOMTabbedComponent(DOM)-- > DOMTabEMEA
-// DOMTabbedComponent-- > DOMTabAmerica
-// FirebaseTabbedComponent(Firebase)-- > FirebaseTabEMEA
-// FirebaseTabbedComponent-- > FirebaseTabAmerica
-//
-// SalesTabbedComponentEMEA-- > SalesTabEMEA
-// SalesTabbedComponentAmerica-- > SalesTabAmerica
-//
-// SinkDOMTabAmerica-- > SinkDOMTabbedComponent
-// SinkDOMTabEMEA-- > SinkDOMTabbedComponent
-//
-// SinkActionTabAmerica-- > SinkActionTabbedComponent
-// SinkActionTabEMEA-- > SinkActionTabbedComponent
-//
-// end
+ graph TB
+
+ subgraph
+ TabbedComponent
+ subgraph
+ TabEMEA
+ subgraph
+ SourcesTabEMEA
+ DOMTabEMEA(DOM)
+ FirebaseTabEMEA(Firebase)
+ SalesTabEMEA(salesEMEA)
+ end
+
+ subgraph
+ SinksTabEMEA
+ SinkDOMTabEMEA(DOM)
+ SinkActionTabEMEA(Action)
+ end
+
+ DOMTabEMEA-->bodyEMEA(...)
+ FirebaseTabEMEA(Firebase)-->bodyEMEA(...)
+ alesTabEMEA(salesEMEA)-->bodyEMEA(...)
+ bodyEMEA-->SinkDOMTabEMEA
+ bodyEMEA-->SinkActionTabEMEA
+ end
+
+ subgraph
+ TabAmerica
+ subgraph
+ SourcesTabAmerica
+ DOMTabAmerica(DOM)
+ FirebaseTabAmerica(Firebase)
+ SalesTabAmerica(salesAmerica)
+ end
+
+ subgraph
+ SinksTabAmerica
+ SinkDOMTabAmerica(DOM)
+ SinkActionTabAmerica(Action)
+ end
+
+ DOMTabAmerica-->bodyAmerica(...)
+ FirebaseTabAmerica(Firebase)-->bodyAmerica(...)
+ SalesTabAmerica(salesAmerica)-->bodyAmerica(...)
+ bodyAmerica-->SinkDOMTabAmerica
+ bodyAmerica-->SinkActionTabAmerica
+ end
+
+ subgraph
+ SourcesTabbedComponent
+ subgraph
+ ExtraSourcesTabbedComponent
+ SalesTabbedComponentEMEA(salesEMEA)
+ SalesTabbedComponentAmerica(salesAmerica)
+ end
+
+ DOMTabbedComponent(DOM)
+ FirebaseTabbedComponent(Firebase)
+ end
+
+ subgraph
+ SinksTabbedComponent
+ SinkDOMTabbedComponent(DOM)
+ SinkActionTabbedComponent(Action)
+ end
+
+ DOMTabbedComponent(DOM)-->DOMTabEMEA
+ DOMTabbedComponent-->DOMTabAmerica
+ FirebaseTabbedComponent(Firebase)-->FirebaseTabEMEA
+ FirebaseTabbedComponent-->FirebaseTabAmerica
+
+ SalesTabbedComponentEMEA-->SalesTabEMEA
+ SalesTabbedComponentAmerica-->SalesTabAmerica
+
+ SinkDOMTabAmerica-->SinkDOMTabbedComponent
+ SinkDOMTabEMEA-->SinkDOMTabbedComponent
+
+ SinkActionTabAmerica-->SinkActionTabbedComponent
+ SinkActionTabEMEA-->SinkActionTabbedComponent
+
+ end
 
 // Given a sketch of Sparks landing page
 
